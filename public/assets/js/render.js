@@ -144,11 +144,11 @@ export function renderSheet(S, extraRows = 0) {
     return `<div class="chip ${cls(a)}" data-sign="${r}" style="cursor:pointer">${ROLE_LABEL[r]}<small>${a ? `${a.status === 'APPROVED' ? '✔' : '✖'} ${esc(a.actor)}` : 'menunggu'}</small></div>`;
   });
   out.push(`<tr style="height:34px">${td(sym[3][0], { cl: 'lg' })}${td(`<div class="flow"><div class="chip">PIC MTN<small>input harian</small></div><span class="arrow">→</span>${flow.join('<span class="arrow">→</span>')}</div>`, { c: 33, r: 3 })}${td(LEGEND[3], { c: 2, cl: 'lg' })}</tr>`);
-  out.push(`<tr style="height:30px">${td('', {})}${td(LEGEND[4], { c: 2, cl: 'lg' })}</tr>`);
-  out.push(`<tr style="height:30px">${td('', {})}${td(LEGEND[5], { c: 2, cl: 'lg' })}</tr>`);
+  out.push(`<tr style="height:30px">${td('&nbsp;', {})}${td(LEGEND[4], { c: 2, cl: 'lg' })}</tr>`);
+  out.push(`<tr style="height:30px">${td('&nbsp;', {})}${td(LEGEND[5], { c: 2, cl: 'lg' })}</tr>`);
 
   // --- Tabel Temuan Problem ---
-  out.push(`<tr style="height:26px">${td('Temuan Problem', { c: 41, cl: 'b', at: 'style="border-left:0;border-right:0;padding-left:2px"' })}</tr>`);
+  out.push(`<tr style="height:26px">${td('Temuan Problem', { c: 41, cl: 'b sect', at: 'style="padding-left:6px"' })}</tr>`);
   out.push(`<tr class="fh">${td('No', { c: 2, cl: 'fh' })}${td('Tanggal', { cl: 'fh' })}${td('Masalah', { c: 5, cl: 'fh' })}${td('Akar Masalah', { c: 13, cl: 'fh' })}${td('Counter Measure', { c: 13, cl: 'fh' })}${td('Due Date', { c: 5, cl: 'fh' })}${td('PIC', { c: 2, cl: 'fh' })}</tr>`);
   const byLine = Object.fromEntries(S.findings.map((f) => [f.line_no, f]));
   const maxLine = Math.max(S.config.min_finding_rows, ...S.findings.map((f) => f.line_no)) + extraRows;

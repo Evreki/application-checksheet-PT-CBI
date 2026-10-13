@@ -1,5 +1,6 @@
 import { api, getActor, setActor } from './api.js';
 import { renderSheet, MONTHS, ROLE_LABEL, SYMBOLS, esc, fmtDT, fmtNum, glyph, findAp, outOfLimit } from './render.js';
+import { exportExcel } from './excel.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const sheetEl = $('#sheet');
@@ -81,6 +82,8 @@ function fit() {
 function setZoom(z) {
   ui.zoom = Math.min(1.5, Math.max(0.3, z));
   $('#sheet-wrap').style.zoom = ui.zoom;
+  const zv = $('#zoom-val');
+  if (zv) zv.textContent = `${Math.round(ui.zoom * 100)}%`;
 }
 
 // ------------------------------------------------------------------ polling (real-time antar pengguna)
@@ -253,13 +256,31 @@ function openSign(role) {
 function askName(first = false) {
   return new Promise((res) => {
     openDialog(`<h3>${first ? 'Selamat datang 👋' : 'Ganti nama pengguna'}</h3><p class="sub">Aplikasi ini tanpa login. Nama Anda hanya dicatat sebagai jejak siapa yang mengisi / menyetujui.</p>
-      <label for="d-name">Nama Anda</label><input type="text" id="d-name" maxlength="100" value="${esc(getActor())}" autocomplete="name">
+      <label for="d-name">Nama Anda</label><input type="text" id="d-name" maxlength="100" value="${esc(getActor())}" autocomplete="name" placeholder="Ketik nama Anda...">
       <div class="actions"><button class="btn pri" id="d-ok">Mulai</button></div>`, (d) => {
-      const go = () => { const v = $('#d-name', d).value.trim(); if (!v) { $('#d-name', d).focus(); return; } setActor(v); $('#who span').textContent = v; d.close(); res(); };
-      $('#d-ok', d).onclick = go;
-      $('#d-name', d).onkeydown = (e) => e.key === 'Enter' && go();
+      const input = $('#d-name', d);
+      const btn = $('#d-ok', d);
+      const go = () => {
+        const v = input.value.trim();
+        if (!v) {
+          input.focus();
+          input.style.borderColor = '#b3261e';
+          return;
+        }
+        setActor(v);
+        $('#who span').textContent = v;
+        d.close();
+        res();
+      };
+      btn.onclick = go;
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          go();
+        }
+      });
       d.addEventListener('cancel', (e) => { if (!getActor()) e.preventDefault(); });
-      $('#d-name', d).focus();
+      setTimeout(() => input.focus(), 50);
     });
   });
 }
@@ -323,11 +344,70 @@ $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-
 const periodChanged = () => { ui.month = Number($('#month').value); ui.year = Number($('#year').value); if (ui.year >= 2000 && ui.year <= 2100) openSheet().catch((er) => toast(er.message, 'err')); };
 $('#month').addEventListener('change', periodChanged);
 $('#year').addEventListener('change', periodChanged);
+
+function shiftPeriod(delta) {
+  let m = Number($('#month').value) + delta;
+  let y = Number($('#year').value);
+  if (m < 1) { m = 12; y--; }
+  else if (m > 12) { m = 1; y++; }
+  $('#month').value = m;
+  $('#year').value = y;
+  periodChanged();
+}
+$('#period-prev')?.addEventListener('click', () => shiftPeriod(-1));
+$('#period-next')?.addEventListener('click', () => shiftPeriod(1));
+
 $('#zoom-in').onclick = () => setZoom(ui.zoom + 0.1);
 $('#zoom-out').onclick = () => setZoom(ui.zoom - 0.1);
 $('#zoom-fit').onclick = fit;
 $('#btn-print').onclick = () => window.print();
+$('#btn-excel').onclick = () => {
+  if (!S) return toast('Data belum siap untuk diekspor', 'err');
+  exportExcel(S);
+  toast('File Excel berhasil diunduh ✔', 'ok');
+};
 $('#who').onclick = () => askName(false);
+$('#sync')?.addEventListener('click', async () => {
+  if (ui.busy) return;
+  setSync('busy', 'Sync…');
+  toast('Menyinkronkan data…');
+  try {
+    const r = await api.poll(S.sheet.id, -1);
+    apply(r, { force: true });
+    setSync('', 'Live');
+    toast('Data tersinkronisasi ✔', 'ok');
+  } catch (err) {
+    setSync('err', 'Gagal');
+    toast('Gagal sinkronisasi: ' + err.message, 'err');
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea, select')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+    e.preventDefault();
+    window.print();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+    e.preventDefault();
+    $('#btn-excel')?.click();
+  } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+    e.preventDefault();
+    fit();
+  } else if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+    e.preventDefault();
+    setZoom(ui.zoom + 0.1);
+  } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+    e.preventDefault();
+    setZoom(ui.zoom - 0.1);
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+    e.preventDefault();
+    shiftPeriod(-1);
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+    e.preventDefault();
+    shiftPeriod(1);
+  }
+});
+
 addEventListener('resize', () => { clearTimeout(ui.rt); ui.rt = setTimeout(fit, 250); });
 
 function markTabs() { document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tpl === ui.tpl)); }
