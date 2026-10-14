@@ -4,9 +4,28 @@ import { exportExcel } from './excel.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const sheetEl = $('#sheet');
-const ui = { tpl: localStorage.getItem('cs_tpl') || null, year: 0, month: 0, zoom: 1, extraRows: 0, busy: false, focus: null, dirty: false, startedAt: Date.now() };
+const ui = {
+  tpl: localStorage.getItem('cs_tpl') || null,
+  templates: [],
+  view: 'portal',
+  year: 0,
+  month: 0,
+  zoom: 1,
+  extraRows: 0,
+  busy: false,
+  focus: null,
+  dirty: false,
+  startedAt: Date.now(),
+  filter: 'all',
+  search: '',
+};
 let S = null;
 let pop = null; // { item, day }
+
+function updateActorUI(name) {
+  const n = name || getActor() || 'Belum diisi';
+  document.querySelectorAll('.actor-name').forEach((el) => { el.textContent = n; });
+}
 
 // ------------------------------------------------------------------ util
 function toast(msg, type = '') {
@@ -70,15 +89,38 @@ async function openSheet() {
   ui.extraRows = 0;
   apply(state, { force: true });
   setSync('', 'Live');
-  fit();
+  // Gunakan skala 100% terbaca secara default agar tabel tajam & bebas digeser di segala arah
+  if (!ui.zoom || ui.zoom < 0.8) {
+    setZoom(1.0);
+  } else {
+    setZoom(ui.zoom);
+  }
+  const stage = $('#stage');
+  if (stage) {
+    stage.scrollTop = 0;
+    stage.scrollLeft = 0;
+  }
 }
 
 function fit() {
   const wrap = $('#sheet-wrap');
+  if (!wrap) return;
   wrap.style.zoom = 1;
-  const z = Math.min(1, ($('#stage').clientWidth - 28) / wrap.offsetWidth);
-  setZoom(Math.max(0.35, Math.floor(z * 100) / 100));
+  const stage = $('#stage');
+  const stageW = stage ? stage.clientWidth - 48 : window.innerWidth - 48;
+  const z = Math.min(1, stageW / wrap.offsetWidth);
+  const fitZ = Math.max(0.35, Math.floor(z * 100) / 100);
+
+  // Smart toggle: Bila sudah fit, klik lagi akan mengembalikan ke skala 100% normal
+  if (Math.abs(ui.zoom - fitZ) < 0.04) {
+    setZoom(1.0);
+    toast('Tampilan: Skala Normal (100%)');
+  } else {
+    setZoom(fitZ);
+    toast(`Tampilan: Muat Layar (${Math.round(fitZ * 100)}%)`);
+  }
 }
+
 function setZoom(z) {
   ui.zoom = Math.min(1.5, Math.max(0.3, z));
   $('#sheet-wrap').style.zoom = ui.zoom;
@@ -268,7 +310,7 @@ function askName(first = false) {
           return;
         }
         setActor(v);
-        $('#who span').textContent = v;
+        updateActorUI(v);
         d.close();
         res();
       };
@@ -340,7 +382,181 @@ $('#pop').addEventListener('keydown', (e) => {
 });
 document.addEventListener('mousedown', (e) => { if (!$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('td.day')) closePop(); });
 
-$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tpl]'); if (b) { ui.tpl = b.dataset.tpl; localStorage.setItem('cs_tpl', ui.tpl); markTabs(); openSheet().catch((er) => toast(er.message, 'err')); } });
+// ------------------------------------------------------------------ portal & workstation navigation
+function showPortal() {
+  const ws = $('#workstation-view');
+  const pt = $('#portal-view');
+  if (ws) {
+    ws.hidden = true;
+    ws.style.setProperty('display', 'none', 'important');
+  }
+  if (pt) {
+    pt.hidden = false;
+    pt.style.setProperty('display', 'flex', 'important');
+  }
+  ui.view = 'portal';
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+}
+
+async function showWorkstation(tplCode) {
+  if (tplCode) {
+    ui.tpl = tplCode;
+    localStorage.setItem('cs_tpl', ui.tpl);
+  }
+  const ws = $('#workstation-view');
+  const pt = $('#portal-view');
+  if (pt) {
+    pt.hidden = true;
+    pt.style.setProperty('display', 'none', 'important');
+  }
+  if (ws) {
+    ws.hidden = false;
+    ws.style.setProperty('display', 'flex', 'important');
+  }
+  ui.view = 'workstation';
+  if ($('#switch-tpl')) $('#switch-tpl').value = ui.tpl;
+
+  // Pastikan posisi viewport selalu di 0,0 agar topbar tidak pernah bergeser / terpotong
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+
+  if (!S || S.template?.code !== ui.tpl) {
+    setSync('busy', 'Memuat…');
+    await openSheet();
+  } else {
+    if (!ui.zoom || ui.zoom < 0.8) setZoom(1.0);
+    else setZoom(ui.zoom);
+  }
+
+  const stage = $('#stage');
+  if (stage) {
+    stage.scrollTop = 0;
+    stage.scrollLeft = 0;
+  }
+}
+
+// ------------------------------------------------------------------ stage smooth drag-to-pan
+function initStagePanning() {
+  const stage = $('#stage');
+  if (!stage) return;
+  let isDown = false;
+  let startX = 0, startY = 0;
+  let sLeft = 0, sTop = 0;
+  let hasMoved = false;
+
+  stage.addEventListener('mousedown', (e) => {
+    // Abaikan jika klik pada kontrol form / input / popover / dialog
+    if (e.target.closest('input, textarea, select, button, .pop, dialog')) return;
+
+    isDown = true;
+    hasMoved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    sLeft = stage.scrollLeft;
+    sTop = stage.scrollTop;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (!hasMoved && Math.hypot(dx, dy) > 5) {
+      hasMoved = true;
+      stage.classList.add('grabbing');
+    }
+    if (hasMoved) {
+      stage.scrollLeft = sLeft - dx;
+      stage.scrollTop = sTop - dy;
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDown) {
+      isDown = false;
+      stage.classList.remove('grabbing');
+    }
+  });
+}
+
+function showComingSoon(badgeText, titleText, descText) {
+  const dlg = $('#dlg-coming-soon');
+  if (!dlg) return;
+  $('#cs-dlg-badge').textContent = badgeText;
+  $('#cs-dlg-title').textContent = titleText;
+  $('#cs-dlg-desc').textContent = descText;
+  dlg.showModal();
+}
+
+function startClock() {
+  const update = () => {
+    const el = $('#clock-txt');
+    if (!el) return;
+    const now = new Date();
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const dName = days[now.getDay()];
+    const dDate = now.getDate();
+    const dMon = MONTHS[now.getMonth()].slice(0, 3);
+    const dYr = now.getFullYear();
+    const dHr = String(now.getHours()).padStart(2, '0');
+    const dMin = String(now.getMinutes()).padStart(2, '0');
+    el.textContent = `${dName}, ${dDate} ${dMon} ${dYr} • ${dHr}:${dMin} WIB`;
+  };
+  update();
+  setInterval(update, 30000);
+}
+
+// ------------------------------------------------------------------ event wiring
+$('#btn-back-hub')?.addEventListener('click', showPortal);
+
+$('#switch-tpl')?.addEventListener('change', (e) => {
+  if (e.target.value) {
+    showWorkstation(e.target.value).catch((er) => toast(er.message, 'err'));
+  }
+});
+
+// 3 Pillar Navigation (Harian, Mingguan, Tahunan)
+document.querySelectorAll('.pillar-card').forEach((card) => {
+  card.addEventListener('click', () => {
+    const freq = card.dataset.freq;
+    if (freq === 'daily') {
+      showWorkstation(ui.tpl).catch((er) => toast(er.message, 'err'));
+    } else if (freq === 'weekly') {
+      showComingSoon(
+        'MODUL MINGGUAN',
+        'Laporan Mingguan Sedang Dipersiapkan',
+        'Format checklist rekapitulasi 7-harian, greasing bearing mekanik, dan pembersihan filter sedang distandarisasi bersama tim Maintenance PT. Century Batteries Indonesia. Modul ini akan segera aktif!'
+      );
+    } else if (freq === 'yearly') {
+      showComingSoon(
+        'MODUL TAHUNAN / OVERHAUL',
+        'Laporan Tahunan Sedang Dipersiapkan',
+        'Format audit tahunan komprehensif, evaluasi masa pakai spare part kritis, overhaul besar mesin, dan sertifikasi alat sedang diformulasikan bersama tim Maintenance PT. Century Batteries Indonesia. Modul ini akan segera aktif!'
+      );
+    }
+  });
+
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      card.click();
+    }
+  });
+});
+
+$('#btn-open-daily')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  showWorkstation(ui.tpl).catch((er) => toast(er.message, 'err'));
+});
+
+$('#cs-dlg-close')?.addEventListener('click', () => {
+  $('#dlg-coming-soon')?.close();
+});
+
+$('#portal-who')?.addEventListener('click', () => askName(false));
+
 const periodChanged = () => { ui.month = Number($('#month').value); ui.year = Number($('#year').value); if (ui.year >= 2000 && ui.year <= 2100) openSheet().catch((er) => toast(er.message, 'err')); };
 $('#month').addEventListener('change', periodChanged);
 $('#year').addEventListener('change', periodChanged);
@@ -408,36 +624,62 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-addEventListener('resize', () => { clearTimeout(ui.rt); ui.rt = setTimeout(fit, 250); });
+addEventListener('resize', () => {
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+});
 
-function markTabs() { document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tpl === ui.tpl)); }
+function dismissSplash() {
+  document.querySelectorAll('#splash').forEach((el) => {
+    el.classList.add('done');
+    setTimeout(() => { try { el.remove(); } catch {} }, 400);
+  });
+}
 
 // ------------------------------------------------------------------ boot
 (async function boot() {
   const msg = $('#splash-msg');
+  // Failsafe: jamin splash tidak pernah hang melebihi 3 detik jika ada kendala
+  const watchdog = setTimeout(() => {
+    console.warn('Watchdog: splash auto-dismissed');
+    dismissSplash();
+  }, 3500);
+
   try {
     const now = new Date();
     ui.year = now.getFullYear(); ui.month = now.getMonth() + 1;
     $('#month').innerHTML = MONTHS.map((m, i) => `<option value="${i + 1}"${i + 1 === ui.month ? ' selected' : ''}>${m}</option>`).join('');
     $('#year').value = ui.year;
-    $('#who span').textContent = getActor() || 'Belum diisi';
 
-    msg.textContent = 'Memuat daftar form…';
-    const tpls = await api.templates();
-    if (!tpls.length) throw new Error('Belum ada template form. Jalankan: php spark db:seed ChecksheetSeeder');
-    if (!tpls.some((t) => t.code === ui.tpl)) ui.tpl = tpls[0].code;
-    $('#tabs').innerHTML = tpls.map((t) => `<button data-tpl="${esc(t.code)}">${esc(t.machine_type)}</button>`).join('');
-    markTabs();
+    updateActorUI();
+    startClock();
+    initStagePanning();
 
-    msg.textContent = 'Menyiapkan lembar inspeksi…';
-    await openSheet();
-    await new Promise((r) => setTimeout(r, Math.max(0, 1500 - (Date.now() - ui.startedAt)))); // loading minimal agar mulus
-    $('#splash').classList.add('done');
-    setTimeout(() => $('#splash').remove(), 800);
+    if (msg) msg.textContent = 'Memuat master peralatan…';
+    ui.templates = await api.templates();
+    if (!ui.templates.length) throw new Error('Belum ada template form. Jalankan: php spark db:seed ChecksheetSeeder');
+    if (!ui.templates.some((t) => t.code === ui.tpl)) ui.tpl = ui.templates[0].code;
+
+    // Populate switch-tpl dropdown in workstation
+    const sw = $('#switch-tpl');
+    if (sw) {
+      sw.innerHTML = ui.templates.map((t) => `<option value="${esc(t.code)}">${esc(t.machine_type)} (${esc(t.section || 'Utility')})</option>`).join('');
+      sw.value = ui.tpl;
+    }
+
+    showPortal();
+
+    clearTimeout(watchdog);
+    dismissSplash();
     if (!getActor()) await askName(true);
     schedulePoll();
   } catch (e) {
-    msg.innerHTML = `<span style="color:#b3261e">⚠ ${esc(e.message)}</span><br><small>Periksa koneksi database (.env) dan jalankan migrasi.</small>`;
-    $('.bar').style.display = 'none';
+    console.error('Boot error:', e);
+    clearTimeout(watchdog);
+    if (msg) {
+      msg.innerHTML = `<span style="color:#ef4444;font-weight:600">⚠ ${esc(e.message)}</span><br><button onclick="location.reload()" style="margin-top:12px;padding:7px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;font-size:13px">Muat Ulang</button>`;
+    }
+    const bar = $('.bar');
+    if (bar) bar.style.display = 'none';
   }
 })();
