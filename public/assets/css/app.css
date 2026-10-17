@@ -187,8 +187,8 @@ button{cursor:pointer}
 }
 
 /* ---------- Sheet (meniru xlsx) ---------- */
-table.cs{border-collapse:collapse;table-layout:fixed;background:var(--paper);font-size:12px}
-table.cs td{border:1px solid var(--line);padding:0 4px;overflow:hidden;vertical-align:middle;position:relative}
+table.cs{width:max-content;border-collapse:collapse;table-layout:fixed;background:var(--paper);font-size:12px}
+table.cs td{border:1px solid var(--line);padding:0 4px;overflow:hidden;vertical-align:middle;position:relative;box-sizing:border-box}
 .cs .mono{font-family:"Courier New",monospace}
 .cs .c{text-align:center}.cs .b{font-weight:700}
 .cs .med{border-width:1px}
@@ -205,7 +205,7 @@ table.cs td{border:1px solid var(--line);padding:0 4px;overflow:hidden;vertical-
 .cs .meta td.l{width:70px}.cs .meta td.rl{width:80px;border-left:1px solid #000}
 .cs .meta input{border:0;background:transparent;width:100%;font:inherit;padding:0;outline:none}
 .cs .meta input:focus,.cs .meta input:hover{background:#fff8c5}
-.cs td.dayh{padding:0;font:700 11px "Courier New",monospace;text-align:center;cursor:pointer;height:24px;user-select:none}
+.cs td.dayh{padding:0;font:700 11px "Courier New",monospace;text-align:center;cursor:pointer;height:24px;user-select:none;box-sizing:border-box}
 .cs td.dayh:hover{outline:2px solid #1a73e8;outline-offset:-2px;z-index:2}
 .cs td.dayh.today{box-shadow:inset 0 -3px var(--brand)}
 .cs td.dayh.ok{background:var(--ok-bg);color:#0b5a22}
@@ -215,7 +215,7 @@ table.cs td{border:1px solid var(--line);padding:0 4px;overflow:hidden;vertical-
 .cs .sect{font:700 14px "Courier New",monospace;height:22px}
 .cs tr.item{height:54px}
 .cs tr.item td.t{font-size:13px}
-.cs td.day{padding:0;text-align:center;cursor:pointer;height:54px}
+.cs td.day{padding:0;text-align:center;cursor:pointer;height:54px;box-sizing:border-box}
 .cs td.day:focus{outline:3px solid #1a73e8;outline-offset:-3px;z-index:3}
 .cs td.day:hover{background:#eef5ff}
 .cs td.day.locked{background:#f1fbf3}
@@ -228,9 +228,106 @@ table.cs td{border:1px solid var(--line);padding:0 4px;overflow:hidden;vertical-
 .cs td.day .v{display:block;font:600 10px/1.2 Arial;color:#333;margin-top:3px}
 .cs td.day .v.bad{color:#b00020}
 .cs td.day.hasnote::after{content:"";position:absolute;right:0;top:0;border:5px solid transparent;border-top-color:#f39c12;border-right-color:#f39c12}
-.cs input.cell,.cs textarea.cell{width:100%;border:0;background:transparent;outline:none;padding:4px 2px}
+.cs input.cell,.cs textarea.cell{width:100%;min-width:0;box-sizing:border-box;border:0;background:transparent;outline:none;padding:2px 4px}
+.cs input[type="date"].cell{min-width:0;max-width:100%;box-sizing:border-box;font-size:11px;font-family:inherit}
 .cs input.cell:focus{background:#fff8c5}
 .cs .unitcol{background:#fff}
+.cs .unit-v{
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  font: 700 13px "Courier New", monospace;
+  letter-spacing: 2.5px;
+  background: #f8fafc;
+  padding: 10px 4px;
+  vertical-align: middle;
+  border-right: 1.5px solid #000 !important;
+}
+.cs .service-box{
+  border: 1.5px solid #000;
+  padding: 6px 8px;
+  background: #fff;
+  font: 700 11px "Courier New", monospace;
+  line-height: 1.45;
+  text-align: left;
+}
+.cs .service-box .sb-title{
+  font-size: 11.5px;
+  text-decoration: underline;
+  margin-bottom: 4px;
+  display: block;
+}
+.cs-service-box{
+  border: 1.5px solid #000;
+  background: #fff;
+  height: 100%;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+  font: 700 11px "Courier New", monospace;
+  text-align: left;
+  box-sizing: border-box;
+}
+.cs-service-box .sb-head{
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-bottom: 1.5px solid #000;
+  letter-spacing: 0.5px;
+  background: #fff;
+}
+.cs-service-box .sb-line{
+  padding: 7px 8px;
+  border-bottom: 1.5px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  background: #fff;
+}
+.cs-service-box .sb-line:last-child{
+  border-bottom: 0;
+}
+.cs-service-box .sb-line b{
+  font-weight: 700;
+}
+.cs td.red-cell{
+  background: #ff0000 !important;
+  border: 1.5px solid #000 !important;
+  height: 32px;
+  padding: 0;
+}
+.cs td.p-0{
+  padding: 0 !important;
+}
+.cs tr.dashed-row td{
+  border-bottom: 1px dashed #738297 !important;
+}
+.cs tr.dashed-row.last-dashed td{
+  border-bottom: 1.5px solid #000 !important;
+}
+.cs tr.dashed-row td.unit-v{
+  border-bottom: 1.5px solid #000 !important;
+}
+.cs td.month-cell{
+  text-align: center;
+  cursor: pointer;
+  height: 44px;
+  padding: 0;
+}
+.cs td.month-cell:hover{
+  background: #eef5ff;
+}
+.cs td.wk-span-cell{
+  text-align: center;
+  cursor: pointer;
+  height: 52px;
+  padding: 0;
+}
+.cs td.wk-span-cell:hover{
+  background: #eef5ff;
+}
 .cs .redh{background:#ff0000;color:#fff;font:700 16px "Courier New",monospace;text-align:center}
 .cs .lg{font:700 10px "Courier New",monospace;padding:0 6px}
 .cs .big{font:700 13px "Courier New",monospace;text-align:center}
@@ -352,125 +449,86 @@ dialog::backdrop{background:#0b1a2e88;backdrop-filter:blur(2px)}
 .hero-title{margin:0;font-size:24px;font-weight:800;letter-spacing:-0.4px;color:#0f172a;line-height:1.25}
 .hero-sub{margin:0;color:#64748b;font-size:13.5px;line-height:1.45;max-width:580px}
 
-/* 3 Pillars Grid */
-.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
-@media(max-width:960px){.pillars-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;width:100%}}
+/* ========== Equipment Catalog Grid ========== */
+.equip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+@media(max-width:960px){.equip-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;width:100%}}
 
-.pillar-card{background:#ffffff;border:1.5px solid #e2e8f0;border-radius:18px;padding:22px 20px 20px;display:flex;flex-direction:column;justify-content:space-between;position:relative;box-shadow:0 8px 25px rgba(18,38,63,0.05);transition:all .26s cubic-bezier(0.2,0.8,0.2,1);cursor:pointer;overflow:hidden}
-.pillar-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(18,38,63,0.1);border-color:#cbd5e1}
+.eq-card{background:#ffffff;border:1.5px solid #e2e8f0;border-radius:18px;padding:0;display:flex;flex-direction:column;position:relative;box-shadow:0 8px 25px rgba(18,38,63,0.05);transition:all .26s cubic-bezier(0.2,0.8,0.2,1);cursor:pointer;overflow:hidden}
+.eq-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(18,38,63,0.1);border-color:#cbd5e1}
 
-/* Kinetic Scanner Progress Bar (DNA Loading Screen) */
-.card-scanner-track{position:absolute;top:0;left:0;right:0;height:4px;background:#e2e8f0;overflow:hidden;border-radius:18px 18px 0 0}
-.card-scanner-track.standby{background:#e2e8f0}
+/* Kinetic Scanner Track (reuse from DNA) */
+.eq-card .card-scanner-track{position:absolute;top:0;left:0;right:0;height:4px;background:#e2e8f0;overflow:hidden;border-radius:18px 18px 0 0}
 .scanner-beam{display:block;height:100%;width:42%;background:linear-gradient(90deg,#111,var(--brand),#ff4d4d);border-radius:4px;animation:scanSlide 2.2s ease-in-out infinite}
-@keyframes scanSlide{
-  0%{margin-left:-42%}
-  50%{margin-left:100%}
-  100%{margin-left:-42%}
-}
+@keyframes scanSlide{0%{margin-left:-42%}50%{margin-left:100%}100%{margin-left:-42%}}
 
-/* Pillar Card Active (High-Contrast Black & CBI Red Kinetic DNA) */
-.pillar-card.active{
-  background:#ffffff;
-  border:1.5px solid rgba(17,24,39,0.12);
-  box-shadow:0 10px 32px rgba(17,24,39,0.06),0 0 0 1px rgba(212,0,0,0.15);
-}
-.pillar-card.active:hover{
-  border-color:rgba(212,0,0,0.5);
-  box-shadow:0 20px 48px rgba(17,24,39,0.12),0 0 0 1.5px var(--brand),0 6px 24px rgba(212,0,0,0.22);
-}
+/* Card Hover = Activated Feel */
+.eq-card:hover{border-color:rgba(212,0,0,0.5);box-shadow:0 20px 48px rgba(17,24,39,0.12),0 0 0 1.5px var(--brand),0 6px 24px rgba(212,0,0,0.22)}
+.eq-card:hover .eq-orbit .orbit-ring.o-red{animation-duration:1.6s;border-top-color:#ff1e1e;border-right-color:#ff1e1e}
+.eq-card:hover .eq-orbit .orbit-ring.o-dark{animation-duration:1.2s}
 
-.pillar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.eq-card-body{padding:22px 20px 0;flex:1;display:flex;flex-direction:column}
 
-/* Kinetic Dual Spinning Rings (DNA Loading Screen Orbit System) */
-.pillar-orbit-wrap{position:relative;width:50px;height:50px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* Equipment Icon / Orbit System */
+.eq-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.eq-orbit{position:relative;width:54px;height:54px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .orbit-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;pointer-events:none;transition:border-color .3s ease}
 .orbit-ring.o-red{border-top-color:var(--brand);border-right-color:var(--brand);animation:spin 3.2s linear infinite}
 .orbit-ring.o-dark{inset:4px;border-bottom-color:#111;border-left-color:#111;animation:spin 2.4s linear infinite reverse}
-.orbit-ring.o-dark-subtle{border:1.5px dashed #cbd5e1;animation:spin 14s linear infinite}
-.orbit-core{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;animation:float 3s ease-in-out infinite;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.eq-orbit-core{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;animation:float 3s ease-in-out infinite;box-shadow:0 2px 8px rgba(0,0,0,0.08);font-size:20px;background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);border:1px solid #fca5a5}
+.eq-orbit-core.clr-blue{background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);border-color:#93c5fd}
+.eq-orbit-core.clr-green{background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);border-color:#6ee7b7}
+.eq-orbit-core.clr-purple{background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-color:#c4b5fd}
 
-/* Accelerated momentum on hover */
-.pillar-card.active:hover .orbit-ring.o-red{animation-duration:1.6s;border-top-color:#ff1e1e;border-right-color:#ff1e1e}
-.pillar-card.active:hover .orbit-ring.o-dark{animation-duration:1.2s}
+.eq-badge{font-size:10px;font-weight:800;letter-spacing:.6px;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.eq-badge .live-pulse{width:6px;height:6px;border-radius:50%;background:#16a34a;box-shadow:0 0 6px #16a34a;animation:pulse 1.8s infinite}
+@keyframes pulseRed{0%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(212,0,0,0.7)}70%{transform:scale(1.1);box-shadow:0 0 0 5px rgba(212,0,0,0)}100%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(212,0,0,0)}}
 
-.icon-daily{background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);color:var(--brand);border:1px solid #fca5a5}
-.icon-weekly{background:#fef3c7;color:#d97706;border:1px solid #fde68a}
-.icon-yearly{background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe}
+.eq-section-label{font-size:10.5px;font-weight:800;letter-spacing:.8px;color:var(--brand);margin-bottom:2px;display:flex;align-items:center}
+.eq-section-label .cycle-pulse-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin-right:6px;box-shadow:0 0 6px var(--brand);animation:pulseRed 1.8s infinite}
 
-.pillar-badge{font-size:10px;font-weight:800;letter-spacing:.6px;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px}
-.badge-active{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
-.live-pulse{width:6px;height:6px;border-radius:50%;background:#16a34a;box-shadow:0 0 6px #16a34a;animation:pulse 1.8s infinite}
-.badge-soon{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+.eq-title{margin:0 0 4px;font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.3px}
+.eq-dept{margin:0 0 10px;font-size:11.5px;color:#64748b;font-weight:600}
+.eq-dept span{color:#334155;font-weight:700}
 
-.pillar-body{display:flex;flex-direction:column;flex:1}
-.pillar-cycle{font-size:10.5px;font-weight:800;letter-spacing:.8px;color:var(--brand);margin-bottom:4px;display:flex;align-items:center}
-.pillar-card.coming-soon .pillar-cycle{color:#94a3b8}
+.eq-forms-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:5px;flex:1}
+.eq-forms-list li{font-size:11.5px;color:#334155;display:flex;align-items:center;gap:6px;line-height:1.35}
+.eq-forms-list li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--brand);flex-shrink:0}
 
-.cycle-pulse-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin-right:6px;box-shadow:0 0 6px var(--brand);animation:pulseRed 1.8s infinite}
-@keyframes pulseRed{
-  0%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(212,0,0,0.7)}
-  70%{transform:scale(1.1);box-shadow:0 0 0 5px rgba(212,0,0,0)}
-  100%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(212,0,0,0)}
-}
+/* Card CTA */
+.eq-card-action{padding:0 20px 20px}
+.eq-cta{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;transition:all .22s cubic-bezier(0.4,0,0.2,1);font-family:inherit;background:linear-gradient(135deg,#111827 0%,#030712 100%);border:1px solid rgba(212,0,0,0.5);color:#ffffff;box-shadow:0 4px 16px rgba(17,24,39,0.25),0 0 10px rgba(212,0,0,0.2);position:relative;overflow:hidden}
+.eq-cta svg{color:#ff4d4d;transition:transform .2s ease,color .2s ease}
+.eq-card:hover .eq-cta{background:linear-gradient(135deg,var(--brand) 0%,#a00000 100%);border-color:#ff4d4d;box-shadow:0 6px 22px rgba(212,0,0,0.45);transform:translateY(-1px)}
+.eq-card:hover .eq-cta svg{color:#ffffff;transform:translateX(3px)}
+.eq-cta::after{content:'';position:absolute;top:-50%;left:-80%;width:45%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);transform:rotate(25deg);transition:all .6s ease;pointer-events:none}
+.eq-card:hover .eq-cta::after{left:140%}
 
-.pillar-title{margin:0 0 8px;font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.3px}
-.pillar-desc{margin:0 0 16px;font-size:12px;color:#64748b;line-height:1.5;flex:1}
+/* Form count badge on CTA */
+.eq-cta .form-count{background:rgba(255,255,255,0.15);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:800;margin-left:2px}
 
-.pillar-highlights{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px}
-.hl-tag{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
-.hl-tag.muted{color:#94a3b8;background:#f8fafc;border-color:#f1f5f9}
+/* ========== Form Selector Dialog ========== */
+.form-select-dlg{border:0;border-radius:20px;padding:0;width:min(520px,94vw);box-shadow:0 24px 60px rgba(15,23,42,0.2);background:#ffffff;color:#0f172a;overflow:hidden}
+.form-select-dlg::backdrop{background:rgba(15,23,42,0.5);backdrop-filter:blur(5px)}
+.fsd-card{padding:0}
+.fsd-header{display:flex;align-items:center;gap:14px;padding:20px 24px 16px;border-bottom:1px solid #f1f5f9}
+.fsd-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);border:1px solid #fca5a5;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.fsd-header h3{margin:0;font-size:17px;font-weight:800;color:#0f172a;flex:1}
+.fsd-sub{margin:2px 0 0;font-size:12px;color:#64748b}
+.fsd-close-btn{border:none;background:transparent;color:#94a3b8;cursor:pointer;padding:4px;border-radius:8px;transition:all .15s}
+.fsd-close-btn:hover{background:#f1f5f9;color:#0f172a}
+.fsd-options{padding:10px 16px 20px;display:flex;flex-direction:column;gap:10px}
 
-.btn-pillar-cta{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;transition:all .22s cubic-bezier(0.4,0,0.2,1);font-family:inherit}
-
-/* Primary CTA Button: Deep Obsidian Black with CBI Red Accent & Hover Morph */
-.btn-pillar-cta.primary{
-  background:linear-gradient(135deg,#111827 0%,#030712 100%);
-  border:1px solid rgba(212,0,0,0.5);
-  color:#ffffff;
-  box-shadow:0 4px 16px rgba(17,24,39,0.25),0 0 10px rgba(212,0,0,0.2);
-  position:relative;
-  overflow:hidden;
-}
-.btn-pillar-cta.primary svg{color:#ff4d4d;transition:transform .2s ease,color .2s ease}
-.pillar-card.active:hover .btn-pillar-cta.primary{
-  background:linear-gradient(135deg,var(--brand) 0%,#a00000 100%);
-  border-color:#ff4d4d;
-  box-shadow:0 6px 22px rgba(212,0,0,0.45);
-  transform:translateY(-1px);
-}
-.pillar-card.active:hover .btn-pillar-cta.primary svg{
-  color:#ffffff;
-  transform:translateX(3px);
-}
-.btn-pillar-cta.primary::after{
-  content:'';
-  position:absolute;
-  top:-50%;
-  left:-80%;
-  width:45%;
-  height:200%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);
-  transform:rotate(25deg);
-  transition:all .6s ease;
-  pointer-events:none;
-}
-.pillar-card.active:hover .btn-pillar-cta.primary::after{left:140%}
-
-.btn-pillar-cta.ghost{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
-.pillar-card.coming-soon:hover .btn-pillar-cta.ghost{background:#e2e8f0;color:#0f172a}
-
-/* Coming Soon Dialog (Light Clean Style) */
-.cs-dlg{border:0;border-radius:20px;padding:0;width:min(440px,92vw);box-shadow:0 24px 60px rgba(15,23,42,0.18);background:#ffffff;color:#0f172a;border:1px solid #e2e8f0;overflow:hidden}
-.cs-dlg::backdrop{background:rgba(15,23,42,0.45);backdrop-filter:blur(4px)}
-.cs-dlg-card{padding:28px 24px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
-.cs-dlg-icon{width:58px;height:58px;border-radius:50%;background:#fef3c7;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-.cs-dlg-badge{font-size:11px;font-weight:800;letter-spacing:.6px;background:#fef3c7;color:#b45309;padding:3px 12px;border-radius:20px;margin-bottom:8px;border:1px solid #fde68a}
-.cs-dlg-card h3{margin:0 0 6px;font-size:18px;font-weight:800;color:#0f172a}
-.cs-dlg-card p{margin:0 0 16px;font-size:13px;color:#64748b;line-height:1.55}
-.cs-dlg-note{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:#065f46;text-align:left;margin-bottom:20px}
-.cs-dlg-btn{width:100%;padding:10px;border-radius:10px;font-weight:700;background:#0f172a;color:#fff;border:none;cursor:pointer;transition:all .2s ease}
-.cs-dlg-btn:hover{background:#1e293b}
+.fsd-option{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:14px;cursor:pointer;transition:all .2s ease;background:#fff}
+.fsd-option:hover{border-color:var(--brand);background:#fef2f2;box-shadow:0 4px 16px rgba(212,0,0,0.1);transform:translateY(-2px)}
+.fsd-option-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.fsd-option-icon.green{background:#d1fae5;border:1px solid #a7f3d0}
+.fsd-option-icon.blue{background:#dbeafe;border:1px solid #93c5fd}
+.fsd-option-icon.amber{background:#fef3c7;border:1px solid #fde68a}
+.fsd-option-text{flex:1}
+.fsd-option-text h4{margin:0 0 2px;font-size:13.5px;font-weight:700;color:#0f172a}
+.fsd-option-text p{margin:0;font-size:11px;color:#64748b;line-height:1.4}
+.fsd-option-arrow{color:#cbd5e1;transition:all .2s}
+.fsd-option:hover .fsd-option-arrow{color:var(--brand);transform:translateX(3px)}
 
 /* ---------- Toolbar Responsive Rules ---------- */
 @media(max-width:1260px){

@@ -418,6 +418,15 @@ async function showWorkstation(tplCode) {
   ui.view = 'workstation';
   if ($('#switch-tpl')) $('#switch-tpl').value = ui.tpl;
 
+  // Sesuaikan kontrol periode bila template tahunan / master standard
+  const isAnnualOrStd = ui.tpl === 'CHILLER_M' || ui.tpl === 'CHILLER_S';
+  const mSelect = $('#month');
+  const pSep = $('.period-sep');
+  if (mSelect) mSelect.style.display = isAnnualOrStd ? 'none' : '';
+  if (pSep) pSep.style.display = isAnnualOrStd ? 'none' : '';
+  if ($('#period-prev')) $('#period-prev').title = isAnnualOrStd ? 'Tahun sebelumnya' : 'Bulan sebelumnya';
+  if ($('#period-next')) $('#period-next').title = isAnnualOrStd ? 'Tahun berikutnya' : 'Bulan berikutnya';
+
   // Pastikan posisi viewport selalu di 0,0 agar topbar tidak pernah bergeser / terpotong
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   document.body.scrollLeft = 0;
@@ -481,15 +490,6 @@ function initStagePanning() {
   });
 }
 
-function showComingSoon(badgeText, titleText, descText) {
-  const dlg = $('#dlg-coming-soon');
-  if (!dlg) return;
-  $('#cs-dlg-badge').textContent = badgeText;
-  $('#cs-dlg-title').textContent = titleText;
-  $('#cs-dlg-desc').textContent = descText;
-  dlg.showModal();
-}
-
 function startClock() {
   const update = () => {
     const el = $('#clock-txt');
@@ -508,51 +508,200 @@ function startClock() {
   setInterval(update, 30000);
 }
 
-// ------------------------------------------------------------------ event wiring
-$('#btn-back-hub')?.addEventListener('click', showPortal);
+// ------------------------------------------------------------------ Equipment Catalog Configuration & Rendering
+const EQUIPMENT_CATALOG = [
+  {
+    id: 'cooling-tower',
+    title: 'Cooling Tower',
+    section: 'Seksi Utility • Dept. Maintenance',
+    icon: '🌪️',
+    colorClass: 'clr-blue',
+    badge: '1 Form Aktif',
+    desc: 'Monitoring sirkulasi air pendingin, temperatur inlet/outlet, motor fan, dan level basin.',
+    forms: [
+      {
+        code: 'CT',
+        title: 'Checksheet Harian (Daily)',
+        sub: 'Inlet/Outlet Temp, ΔT, Basin Level, Motor Ampere, Getaran Fan, pH Air, Kebocoran',
+        period: 'Harian (Setiap Hari)',
+        icon: '📋',
+        iconClass: 'blue'
+      }
+    ]
+  },
+  {
+    id: 'scrubber',
+    title: 'Scrubber',
+    section: 'Seksi Utility • Dept. Maintenance',
+    icon: '🧪',
+    colorClass: 'clr-green',
+    badge: '1 Form Aktif',
+    desc: 'Pengawasan sistem penetral emisi udara, pH air sirkulasi, nozzle spray, dan fan blower.',
+    forms: [
+      {
+        code: 'SCR',
+        title: 'Checksheet Harian (Daily)',
+        sub: 'pH Air, Flow Pompa, Tekanan Hisap, Level Tangki, Nozzle Spray, Getaran Fan, Sludge',
+        period: 'Harian (Setiap Hari)',
+        icon: '📋',
+        iconClass: 'green'
+      }
+    ]
+  },
+  {
+    id: 'chiller',
+    title: 'Chiller (LSBLG250)',
+    section: 'Seksi Utility • Dept. Maintenance',
+    icon: '❄️',
+    colorClass: 'clr-purple',
+    badge: '3 Form Tersedia',
+    desc: 'Sistem pendingin sentral pabrik. Dilengkapi checklist harian, mingguan, inspeksi bulanan, serta standard preventive machine.',
+    forms: [
+      {
+        code: 'CHILLER_D',
+        title: 'Harian & Mingguan (Daily & Weekly)',
+        sub: 'High/Low Press Indikator, Suhu CT, Running Hour, % Running, E-Stop, Freon, Ampere Motor & Pompa',
+        period: 'Harian + Mingguan',
+        icon: '⚡',
+        iconClass: 'blue'
+      },
+      {
+        code: 'CHILLER_M',
+        title: 'Bulanan & Berkala (Monthly Preventive)',
+        sub: 'Panel Kontrol, Filter Core Dryer, Selenoid & Expansion Valve, Kondensor, Evaporator, Oli Kompresor',
+        period: 'Bulanan / Berkala (1-6 Bln & 1 Thn)',
+        icon: '🗓️',
+        iconClass: 'amber'
+      },
+      {
+        code: 'CHILLER_S',
+        title: 'Standard Preventive Machine',
+        sub: 'Master parameter acuan, foto & posisi komponen, frekuensi & instruksi perawatan (Form-PLS-MTC-D04)',
+        period: 'Standar Master Acuan',
+        icon: '📘',
+        iconClass: 'green'
+      }
+    ]
+  }
+];
 
-$('#switch-tpl')?.addEventListener('change', (e) => {
-  if (e.target.value) {
-    showWorkstation(e.target.value).catch((er) => toast(er.message, 'err'));
+function openFormSelectorDialog(eq) {
+  const dlg = $('#dlg-form-select');
+  if (!dlg) return;
+  $('#fsd-icon').textContent = eq.icon;
+  $('#fsd-title').textContent = eq.title;
+  $('#fsd-sub').textContent = `Pilih formulir pemeriksaan untuk ${eq.title}`;
+  
+  const optContainer = $('#fsd-options');
+  if (optContainer) {
+    optContainer.innerHTML = eq.forms.map((f) => `
+      <div class="fsd-option" role="button" tabindex="0" data-code="${esc(f.code)}">
+        <div class="fsd-option-icon ${esc(f.iconClass)}">${f.icon}</div>
+        <div class="fsd-option-text">
+          <h4>${esc(f.title)}</h4>
+          <p>${esc(f.sub)}</p>
+        </div>
+        <svg class="fsd-option-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </div>
+    `).join('');
+
+    optContainer.querySelectorAll('.fsd-option').forEach((opt) => {
+      const choose = () => {
+        const code = opt.dataset.code;
+        dlg.close();
+        showWorkstation(code).catch((er) => toast(er.message, 'err'));
+      };
+      opt.addEventListener('click', choose);
+      opt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); }
+      });
+    });
+  }
+
+  dlg.showModal();
+}
+
+function renderEquipGrid() {
+  const grid = $('#equip-grid');
+  if (!grid) return;
+
+  grid.innerHTML = EQUIPMENT_CATALOG.map((eq) => `
+    <article class="eq-card" data-eq-id="${esc(eq.id)}" tabindex="0" role="button" aria-label="Buka formulir ${esc(eq.title)}">
+      <div class="card-scanner-track"><span class="scanner-beam"></span></div>
+      <div class="eq-card-body">
+        <div class="eq-head">
+          <div class="eq-orbit">
+            <span class="orbit-ring o-red"></span>
+            <span class="orbit-ring o-dark"></span>
+            <div class="eq-orbit-core ${esc(eq.colorClass)}">${eq.icon}</div>
+          </div>
+          <span class="eq-badge"><span class="live-pulse"></span>${esc(eq.badge)}</span>
+        </div>
+        <div class="eq-section-label"><span class="cycle-pulse-dot"></span>${esc(eq.section)}</div>
+        <h2 class="eq-title">${esc(eq.title)}</h2>
+        <p class="eq-dept">${esc(eq.desc)}</p>
+        <ul class="eq-forms-list">
+          ${eq.forms.map((f) => `<li><span><strong>${esc(f.title)}</strong> <small style="color:#64748b">(${esc(f.period)})</small></span></li>`).join('')}
+        </ul>
+      </div>
+      <div class="eq-card-action">
+        <button class="eq-cta" type="button">
+          <span>${eq.forms.length > 1 ? 'Pilih Formulir' : 'Buka Checksheet'}</span>
+          ${eq.forms.length > 1 ? `<span class="form-count">${eq.forms.length}</span>` : ''}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+    </article>
+  `).join('');
+
+  grid.querySelectorAll('.eq-card').forEach((card) => {
+    const handlePick = () => {
+      const eqId = card.dataset.eqId;
+      const eq = EQUIPMENT_CATALOG.find((x) => x.id === eqId);
+      if (!eq) return;
+
+      if (eq.forms.length === 1) {
+        showWorkstation(eq.forms[0].code).catch((er) => toast(er.message, 'err'));
+      } else {
+        openFormSelectorDialog(eq);
+      }
+    };
+
+    card.addEventListener('click', handlePick);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handlePick();
+      }
+    });
+  });
+}
+
+// Dialog Close Wiring
+$('#fsd-close')?.addEventListener('click', () => {
+  $('#dlg-form-select')?.close();
+});
+
+$('#dlg-form-select')?.addEventListener('click', (e) => {
+  if (e.target === $('#dlg-form-select')) {
+    $('#dlg-form-select').close();
   }
 });
 
-// 3 Pillar Navigation (Harian, Mingguan, Tahunan)
-document.querySelectorAll('.pillar-card').forEach((card) => {
-  card.addEventListener('click', () => {
-    const freq = card.dataset.freq;
-    if (freq === 'daily') {
-      showWorkstation(ui.tpl).catch((er) => toast(er.message, 'err'));
-    } else if (freq === 'weekly') {
-      showComingSoon(
-        'MODUL MINGGUAN',
-        'Laporan Mingguan Sedang Dipersiapkan',
-        'Format checklist rekapitulasi 7-harian, greasing bearing mekanik, dan pembersihan filter sedang distandarisasi bersama tim Maintenance PT. Century Batteries Indonesia. Modul ini akan segera aktif!'
-      );
-    } else if (freq === 'yearly') {
-      showComingSoon(
-        'MODUL TAHUNAN / OVERHAUL',
-        'Laporan Tahunan Sedang Dipersiapkan',
-        'Format audit tahunan komprehensif, evaluasi masa pakai spare part kritis, overhaul besar mesin, dan sertifikasi alat sedang diformulasikan bersama tim Maintenance PT. Century Batteries Indonesia. Modul ini akan segera aktif!'
-      );
+// Photo Zoom Modal Wiring
+document.addEventListener('click', (e) => {
+  const photo = e.target.closest('.std-photo-panel img, .chiller-photo-wrap img');
+  if (photo) {
+    const dlg = $('#dlg-photo-zoom');
+    const zoomImg = $('#photo-zoom-img');
+    if (dlg && zoomImg) {
+      zoomImg.src = photo.src;
+      dlg.showModal();
     }
-  });
-
-  card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      card.click();
-    }
-  });
-});
-
-$('#btn-open-daily')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  showWorkstation(ui.tpl).catch((er) => toast(er.message, 'err'));
-});
-
-$('#cs-dlg-close')?.addEventListener('click', () => {
-  $('#dlg-coming-soon')?.close();
+  }
+  if (e.target === $('#dlg-photo-zoom') || e.target.closest('#photo-zoom-close')) {
+    $('#dlg-photo-zoom')?.close();
+  }
 });
 
 $('#portal-who')?.addEventListener('click', () => askName(false));
@@ -562,6 +711,14 @@ $('#month').addEventListener('change', periodChanged);
 $('#year').addEventListener('change', periodChanged);
 
 function shiftPeriod(delta) {
+  if (ui.tpl === 'CHILLER_M' || ui.tpl === 'CHILLER_S') {
+    let y = Number($('#year').value) + delta;
+    if (y >= 2000 && y <= 2100) {
+      $('#year').value = y;
+      periodChanged();
+    }
+    return;
+  }
   let m = Number($('#month').value) + delta;
   let y = Number($('#year').value);
   if (m < 1) { m = 12; y--; }
@@ -667,6 +824,7 @@ function dismissSplash() {
       sw.value = ui.tpl;
     }
 
+    renderEquipGrid();
     showPortal();
 
     clearTimeout(watchdog);
