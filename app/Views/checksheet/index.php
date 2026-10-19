@@ -15,45 +15,115 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 1. PORTAL HUB / LANDING PAGE — EQUIPMENT CATALOG                          -->
-<!-- ========================================================================= --><div id="portal-view">
-    <!-- Portal Header (White Clean Theme with Loading Screen DNA) -->
-    <header class="portal-header no-print">
-        <div class="portal-brand">
-            <div class="brand-avatar-wrapper">
-                <span class="portal-ring p-ring-red"></span>
-                <span class="portal-ring p-ring-dark"></span>
-                <img src="<?= base_url('assets/img/logo.jpg') ?>" alt="CBI Logo">
-            </div>
-            <div class="brand-info">
-                <div class="brand-title-row">
-                    <b><?= esc($cfg->company) ?></b>
+<!-- 1. PORTAL HUB / LANDING PAGE — DUAL-TONE INDUSTRIAL CATALOG                -->
+<!-- ========================================================================= -->
+<div id="portal-view">
+    <!-- Top White Navigation Bar -->
+    <header class="portal-nav-bar no-print">
+        <div class="portal-nav-inner">
+            <!-- Left: Brand Identity -->
+            <div class="portal-brand-left">
+                <!-- Logo Resmi CBI (Sama seperti Splash / Loading Screen) -->
+                <div class="portal-logo-wrap">
+                    <img src="<?= base_url('assets/img/logo.jpg') ?>" alt="<?= esc($cfg->company) ?> Logo" class="portal-logo-img">
                 </div>
-                <span class="portal-tag">CENTRAL MAINTENANCE INSPECTION PLATFORM</span>
+                <div class="portal-brand-text">
+                    <div class="portal-brand-company"><?= esc($cfg->company) ?> -</div>
+                    <div class="portal-brand-platform">Central Maintenance Inspection Platform</div>
+                </div>
             </div>
-        </div>
-        <div class="portal-header-right">
-            <div id="portal-clock" class="portal-clock">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span id="clock-txt">Memuat waktu…</span>
+
+            <!-- Right: Live Clock & User Profile -->
+            <div class="portal-nav-right">
+                <span id="portal-clock-txt" class="portal-clock-text">Memuat waktu…</span>
+                <button id="portal-who" class="portal-user-btn" type="button" title="Klik untuk ganti nama pemeriksa">
+                    <div class="portal-user-avatar">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <span class="portal-user-name actor-name">Belum diisi</span>
+                </button>
             </div>
-            <button class="who portal-who" id="portal-who" title="Klik untuk ganti nama pemeriksa">
-                <i class="who-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i>
-                <span class="actor-name"></span>
-            </button>
         </div>
     </header>
 
-    <main class="portal-container">
-        <!-- Compact Hero Section -->
-        <section class="portal-hero">
-            <h1 class="hero-title">Pusat Checksheet Perawatan Mesin</h1>
-            <p class="hero-sub">Pilih mesin atau peralatan pabrik di bawah untuk membuka lembar pemeriksaan</p>
-        </section>
+    <!-- Dark Industrial Hero Banner with Factory Silhouette -->
+    <section class="hero-industrial-banner">
+        <div class="hero-inner">
+            <h1>Pusat Checksheet Perawatan Mesin</h1>
+            <p>Pilih mesin atau peralatan pabrik di bawah untuk membuka lembar pemeriksaan</p>
+        </div>
+    </section>
 
-        <!-- Equipment Catalog Grid (populated by JS from templates API) -->
-        <div class="equip-grid" id="equip-grid">
-            <!-- Cards are rendered dynamically by app.js boot() -->
+    <!-- Floating KPI Summary Cards (Overlapping Banner & Body) -->
+    <section class="portal-kpi-bar">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <span class="kpi-label">Total Mesin:</span>
+                <span id="kpi-total-machines" class="kpi-val">3</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Form Aktif:</span>
+                <span id="kpi-active-forms" class="kpi-val">5</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Sudah Diperiksa:</span>
+                <span id="kpi-checked" class="kpi-val">-</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Belum Diperiksa:</span>
+                <span id="kpi-unchecked" class="kpi-val">-</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Container: Filter & Equipment Catalog -->
+    <main class="portal-main-wrap">
+        <!-- Filter & Search Bar -->
+        <div class="portal-filter-bar">
+            <div class="portal-filter-left">
+                <!-- Search Box -->
+                <div class="portal-search-box">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input 
+                        id="portal-search"
+                        type="text" 
+                        placeholder="Cari mesin atau seksi..." 
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Filter Pills -->
+                <button class="filter-pill active" data-filter="all" type="button">Semua Seksi</button>
+                <button class="filter-pill" data-filter="Utility" type="button">Seksi Utility</button>
+                <button class="filter-pill" data-filter="Maintenance" type="button">Dept. Maintenance</button>
+                <button class="filter-pill" data-filter="WET CHARGING" type="button">WET CHARGING</button>
+                <button class="filter-pill" data-filter="PLANT SERVICE" type="button">PLANT SERVICE</button>
+            </div>
+
+            <!-- Status Select Dropdown -->
+            <div class="portal-filter-right">
+                <div class="portal-status-select-wrap">
+                    <span>Status:</span>
+                    <select id="portal-status-filter">
+                        <option value="all">Semua</option>
+                        <option value="active">Form Aktif</option>
+                        <option value="checked">Sudah Diperiksa</option>
+                        <option value="unchecked">Belum Diperiksa</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-Column Machine Cards Grid (populated dynamically) -->
+        <div class="portal-equip-grid" id="equip-grid">
+            <!-- Cards rendered dynamically by app.js -->
+        </div>
+
+        <!-- Bottom Pagination Counter -->
+        <div id="equip-count-msg" class="portal-count-msg">
+            Menampilkan 3 dari 3 mesin
         </div>
     </main>
 </div>
@@ -144,7 +214,9 @@
 <dialog id="dlg-form-select" class="form-select-dlg">
     <div class="fsd-card">
         <div class="fsd-header">
-            <div class="fsd-icon" id="fsd-icon">❄️</div>
+            <div class="fsd-icon" id="fsd-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            </div>
             <div>
                 <h3 id="fsd-title">Pilih Formulir Pemeriksaan</h3>
                 <p class="fsd-sub" id="fsd-sub">Pilih jenis lembar kerja yang ingin dibuka</p>

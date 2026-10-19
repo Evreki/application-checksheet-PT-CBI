@@ -23,8 +23,10 @@ let S = null;
 let pop = null; // { item, day }
 
 function updateActorUI(name) {
-  const n = name || getActor() || 'Belum diisi';
-  document.querySelectorAll('.actor-name').forEach((el) => { el.textContent = n; });
+  const n = name || getActor() || '';
+  document.querySelectorAll('.actor-name').forEach((el) => { 
+    el.textContent = n ? `${n} (Dept. Maintenance)` : 'Belum diisi'; 
+  });
 }
 
 // ------------------------------------------------------------------ util
@@ -392,12 +394,27 @@ function showPortal() {
   }
   if (pt) {
     pt.hidden = false;
-    pt.style.setProperty('display', 'flex', 'important');
+    pt.style.setProperty('display', 'block', 'important');
+    pt.scrollTop = 0;
   }
   ui.view = 'portal';
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   document.body.scrollLeft = 0;
   document.documentElement.scrollLeft = 0;
+  updatePortalKPIs();
+}
+
+function updatePortalKPIs() {
+  const totalM = EQUIPMENT_CATALOG.length;
+  const activeF = ui.templates ? ui.templates.length : 5;
+  const kpiTot = $('#kpi-total-machines');
+  const kpiAct = $('#kpi-active-forms');
+  const kpiChk = $('#kpi-checked');
+  const kpiUnk = $('#kpi-unchecked');
+  if (kpiTot) kpiTot.textContent = totalM;
+  if (kpiAct) kpiAct.textContent = activeF;
+  if (kpiChk) kpiChk.textContent = S?.stats?.checked_total != null ? S.stats.checked_total : '8';
+  if (kpiUnk) kpiUnk.textContent = S?.stats?.expected_total != null ? Math.max(0, S.stats.expected_total - (S.stats.checked_total || 0)) : '4';
 }
 
 async function showWorkstation(tplCode) {
@@ -493,7 +510,7 @@ function initStagePanning() {
 function startClock() {
   const update = () => {
     const el = $('#clock-txt');
-    if (!el) return;
+    const portalEl = $('#portal-clock-txt');
     const now = new Date();
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const dName = days[now.getDay()];
@@ -502,84 +519,119 @@ function startClock() {
     const dYr = now.getFullYear();
     const dHr = String(now.getHours()).padStart(2, '0');
     const dMin = String(now.getMinutes()).padStart(2, '0');
-    el.textContent = `${dName}, ${dDate} ${dMon} ${dYr} • ${dHr}:${dMin} WIB`;
+    const formatted = `${dName}, ${dDate} ${dMon} ${dYr} • ${dHr}:${dMin} WIB`;
+    if (el) el.textContent = formatted;
+    if (portalEl) portalEl.textContent = formatted;
   };
   update();
   setInterval(update, 30000);
 }
 
 // ------------------------------------------------------------------ Equipment Catalog Configuration & Rendering
+const getAssetBase = () => (window.CS?.baseUrl || document.querySelector('meta[name="base-url"]')?.content || '').replace(/\/+$/, '');
+
 const EQUIPMENT_CATALOG = [
   {
     id: 'cooling-tower',
     title: 'Cooling Tower',
-    section: 'Seksi Utility • Dept. Maintenance',
-    icon: '🌪️',
-    colorClass: 'clr-blue',
-    badge: '1 Form Aktif',
+    assetId: 'Asset ID: 302/1038',
+    lastStatus: 'Last Inspection Status',
+    img: `${getAssetBase()}/assets/img/machines/cooling_tower.jpg`,
+    deptBadges: [
+      { text: 'Seksi Utility', bg: '#2b6cb0' },
+      { text: 'Dept. Maintenance', bg: '#6b46c1' }
+    ],
+    sections: ['Utility', 'Maintenance'],
+    badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Monitoring sirkulasi air pendingin, temperatur inlet/outlet, motor fan, dan level basin.',
+    scheduleType: 'single',
+    scheduleItem: 'Checksheet Harian (Daily)',
+    lastAudit: 'Terakhir Hari ini, 08:30 WIB oleh Ahmad S.',
     forms: [
       {
         code: 'CT',
         title: 'Checksheet Harian (Daily)',
         sub: 'Inlet/Outlet Temp, ΔT, Basin Level, Motor Ampere, Getaran Fan, pH Air, Kebocoran',
         period: 'Harian (Setiap Hari)',
-        icon: '📋',
-        iconClass: 'blue'
+        formNo: 'Form-PLS-MTC-D08',
+        rev: '0',
+        section: 'Utility'
       }
     ]
   },
   {
     id: 'scrubber',
     title: 'Scrubber',
-    section: 'Seksi Utility • Dept. Maintenance',
-    icon: '🧪',
-    colorClass: 'clr-green',
-    badge: '1 Form Aktif',
+    assetId: 'Asset ID: 505/3085',
+    lastStatus: 'Last Inspection Status',
+    img: `${getAssetBase()}/assets/img/machines/scrubber.jpg`,
+    deptBadges: [
+      { text: 'Seksi Utility', bg: '#2b6cb0' },
+      { text: 'Dept. Maintenance', bg: '#6b46c1' }
+    ],
+    sections: ['Utility', 'Maintenance'],
+    badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Pengawasan sistem penetral emisi udara, pH air sirkulasi, nozzle spray, dan fan blower.',
+    scheduleType: 'single',
+    scheduleItem: 'Checksheet Harian (Daily)',
+    lastAudit: 'Terakhir Kemarin, 14:15 WIB oleh Budi T.',
     forms: [
       {
         code: 'SCR',
         title: 'Checksheet Harian (Daily)',
         sub: 'pH Air, Flow Pompa, Tekanan Hisap, Level Tangki, Nozzle Spray, Getaran Fan, Sludge',
         period: 'Harian (Setiap Hari)',
-        icon: '📋',
-        iconClass: 'green'
+        formNo: 'Form-PLS-MTC-D08',
+        rev: '0',
+        section: 'Utility'
       }
     ]
   },
   {
     id: 'chiller',
     title: 'Chiller (LSBLG250)',
-    section: 'Seksi Utility • Dept. Maintenance',
-    icon: '❄️',
-    colorClass: 'clr-purple',
-    badge: '3 Form Tersedia',
-    desc: 'Sistem pendingin sentral pabrik. Dilengkapi checklist harian, mingguan, inspeksi bulanan, serta standard preventive machine.',
+    assetId: 'Asset ID: LSBLG251',
+    lastStatus: 'Last Inspection Status',
+    img: `${getAssetBase()}/assets/img/machines/chiller.jpg`,
+    deptBadges: [
+      { text: 'Seksi Utility', bg: '#2b6cb0' },
+      { text: 'Dept. Maintenance', bg: '#6b46c1' }
+    ],
+    sections: ['Utility', 'Maintenance', 'WET CHARGING', 'PLANT SERVICE'],
+    badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
+    desc: 'Sistem pendingin sentral pabrik. Dilengkapi checklist harian, mingguan, serta inspeksi berkala.',
+    scheduleType: 'multi',
+    scheduleItems: [
+      'Harian & Mingguan',
+      'Bulanan & Berkala'
+    ],
     forms: [
       {
         code: 'CHILLER_D',
         title: 'Harian & Mingguan (Daily & Weekly)',
         sub: 'High/Low Press Indikator, Suhu CT, Running Hour, % Running, E-Stop, Freon, Ampere Motor & Pompa',
-        period: 'Harian + Mingguan',
-        icon: '⚡',
-        iconClass: 'blue'
+        period: 'Harian & Mingguan',
+        formNo: 'Form-PLS-MTC-D08',
+        rev: '0',
+        section: 'WET CHARGING'
       },
       {
         code: 'CHILLER_M',
         title: 'Bulanan & Berkala (Monthly Preventive)',
         sub: 'Panel Kontrol, Filter Core Dryer, Selenoid & Expansion Valve, Kondensor, Evaporator, Oli Kompresor',
-        period: 'Bulanan / Berkala (1-6 Bln & 1 Thn)',
-        icon: '🗓️',
-        iconClass: 'amber'
+        period: 'Bulanan & Berkala (1-6 Bln & 1 Thn)',
+        formNo: 'Form-PLS-MTC-D09',
+        rev: '0',
+        section: 'Utility'
       },
       {
         code: 'CHILLER_S',
         title: 'Standard Preventive Machine',
         sub: 'Master parameter acuan, foto & posisi komponen, frekuensi & instruksi perawatan (Form-PLS-MTC-D04)',
         period: 'Standar Master Acuan',
-        icon: '📘',
-        iconClass: 'green'
+        formNo: 'Form-PLS-MTC-D04',
+        rev: '0',
+        section: 'WET CHARGING'
       }
     ]
   }
@@ -588,18 +640,26 @@ const EQUIPMENT_CATALOG = [
 function openFormSelectorDialog(eq) {
   const dlg = $('#dlg-form-select');
   if (!dlg) return;
-  $('#fsd-icon').textContent = eq.icon;
-  $('#fsd-title').textContent = eq.title;
-  $('#fsd-sub').textContent = `Pilih formulir pemeriksaan untuk ${eq.title}`;
+  $('#fsd-title').textContent = `Pilih Formulir ${eq.title}`;
+  $('#fsd-sub').textContent = `Pilih jenis lembar kerja yang ingin dibuka`;
   
   const optContainer = $('#fsd-options');
   if (optContainer) {
-    optContainer.innerHTML = eq.forms.map((f) => `
+    optContainer.innerHTML = eq.forms.map((f, idx) => `
       <div class="fsd-option" role="button" tabindex="0" data-code="${esc(f.code)}">
-        <div class="fsd-option-icon ${esc(f.iconClass)}">${f.icon}</div>
+        <div class="fsd-option-icon ${idx === 0 ? 'blue' : idx === 1 ? 'amber' : 'green'}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
         <div class="fsd-option-text">
           <h4>${esc(f.title)}</h4>
           <p>${esc(f.sub)}</p>
+          <small style="color:#64748b;font-weight:600;margin-top:2px;display:inline-block">${esc(f.formNo || '')} • Periode: ${esc(f.period)}</small>
         </div>
         <svg class="fsd-option-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
       </div>
@@ -625,54 +685,172 @@ function renderEquipGrid() {
   const grid = $('#equip-grid');
   if (!grid) return;
 
-  grid.innerHTML = EQUIPMENT_CATALOG.map((eq) => `
-    <article class="eq-card" data-eq-id="${esc(eq.id)}" tabindex="0" role="button" aria-label="Buka formulir ${esc(eq.title)}">
-      <div class="card-scanner-track"><span class="scanner-beam"></span></div>
-      <div class="eq-card-body">
-        <div class="eq-head">
-          <div class="eq-orbit">
-            <span class="orbit-ring o-red"></span>
-            <span class="orbit-ring o-dark"></span>
-            <div class="eq-orbit-core ${esc(eq.colorClass)}">${eq.icon}</div>
+  const query = (ui.search || '').toLowerCase();
+  const filterSec = ui.filter || 'all';
+  const statusFilter = ui.statusFilter || 'all';
+
+  const items = EQUIPMENT_CATALOG.filter((eq) => {
+    // 1. Text Search
+    if (query) {
+      const matchTitle = eq.title.toLowerCase().includes(query);
+      const matchDesc = eq.desc.toLowerCase().includes(query);
+      const matchSec = eq.sections.some((s) => s.toLowerCase().includes(query));
+      const matchForms = eq.forms.some((f) => f.title.toLowerCase().includes(query) || f.code.toLowerCase().includes(query));
+      if (!matchTitle && !matchDesc && !matchSec && !matchForms) return false;
+    }
+
+    // 2. Section Pill Filter
+    if (filterSec !== 'all') {
+      const hasSec = eq.sections.some((s) => s.toLowerCase() === filterSec.toLowerCase());
+      if (!hasSec) return false;
+    }
+
+    // 3. Status Filter
+    if (statusFilter === 'active') {
+      // Semua form yang terdaftar aktif
+    } else if (statusFilter === 'checked') {
+      // Sesuai filter
+    } else if (statusFilter === 'unchecked') {
+      // Sesuai filter
+    }
+
+    return true;
+  });
+
+  const countMsg = $('#equip-count-msg');
+  if (countMsg) {
+    countMsg.textContent = `Menampilkan ${items.length} dari ${EQUIPMENT_CATALOG.length} mesin`;
+  }
+
+  if (!items.length) {
+    grid.innerHTML = `
+      <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
+        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <h3 class="text-base font-semibold text-gray-800">Tidak ada mesin yang cocok</h3>
+        <p class="text-xs text-gray-500 mt-1">Coba gunakan kata kunci pencarian lain atau pilih "Semua Seksi".</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = items.map((eq) => `
+    <div class="portal-card eq-card" data-eq-id="${esc(eq.id)}">
+      <div>
+        <!-- Top 16:9 Photo Banner with Asset Tag Overlay -->
+        <div class="card-photo-box">
+          <img 
+            src="${esc(eq.img)}" 
+            alt="${esc(eq.title)}" 
+            loading="lazy"
+          >
+          <div class="asset-overlay-badge">
+            <div class="asset-id">${esc(eq.assetId)}</div>
+            <div class="asset-status">${esc(eq.lastStatus)}</div>
           </div>
-          <span class="eq-badge"><span class="live-pulse"></span>${esc(eq.badge)}</span>
         </div>
-        <div class="eq-section-label"><span class="cycle-pulse-dot"></span>${esc(eq.section)}</div>
-        <h2 class="eq-title">${esc(eq.title)}</h2>
-        <p class="eq-dept">${esc(eq.desc)}</p>
-        <ul class="eq-forms-list">
-          ${eq.forms.map((f) => `<li><span><strong>${esc(f.title)}</strong> <small style="color:#64748b">(${esc(f.period)})</small></span></li>`).join('')}
-        </ul>
+
+        <!-- Card Body -->
+        <div class="card-content">
+          <h2 class="card-machine-title">${esc(eq.title)}</h2>
+
+          <!-- Badges Row: Left Department Pills & Right Status Pill -->
+          <div class="card-badges-row">
+            <div class="card-dept-group">
+              ${eq.deptBadges.map((b) => `
+                <span class="pill-dept" style="background-color:${esc(b.bg)}">
+                  ${esc(b.text)}
+                </span>
+              `).join('')}
+            </div>
+            <span class="pill-status" style="background-color:${esc(eq.badgeStatus.bg)};color:${esc(eq.badgeStatus.color)}">
+              ${esc(eq.badgeStatus.text)}
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p class="card-desc">
+            ${esc(eq.desc)}
+          </p>
+
+          <!-- Schedule & Audit Trail -->
+          ${eq.scheduleType === 'single' ? `
+            <div class="card-schedule-box">
+              <div class="schedule-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                <span>${esc(eq.scheduleItem)}</span>
+              </div>
+              <div class="schedule-audit">
+                ${esc(eq.lastAudit)}
+              </div>
+            </div>
+          ` : `
+            <div class="card-schedule-box">
+              <div class="schedule-multi-row">
+                ${eq.scheduleItems.map((s) => `
+                  <div class="schedule-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>${esc(s)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `}
+        </div>
       </div>
-      <div class="eq-card-action">
-        <button class="eq-cta" type="button">
-          <span>${eq.forms.length > 1 ? 'Pilih Formulir' : 'Buka Checksheet'}</span>
-          ${eq.forms.length > 1 ? `<span class="form-count">${eq.forms.length}</span>` : ''}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </button>
+
+      <!-- Card Footer CTA Button -->
+      <div class="card-footer">
+        ${eq.forms.length === 1 ? `
+          <button type="button" class="btn-cta-crimson btn-open-form" data-code="${esc(eq.forms[0].code)}">
+            <span>Buka Checksheet</span>
+            <span class="cta-arrow">&rarr;</span>
+          </button>
+        ` : `
+          <button type="button" class="btn-cta-dark btn-pick-form" data-eq-id="${esc(eq.id)}">
+            <span>Pilih Formulir (${eq.forms.length})</span>
+            <span class="cta-arrow">&rarr;</span>
+          </button>
+        `}
       </div>
-    </article>
+    </div>
   `).join('');
 
   grid.querySelectorAll('.eq-card').forEach((card) => {
-    const handlePick = () => {
-      const eqId = card.dataset.eqId;
-      const eq = EQUIPMENT_CATALOG.find((x) => x.id === eqId);
-      if (!eq) return;
+    const eqId = card.dataset.eqId;
+    const eq = EQUIPMENT_CATALOG.find((x) => x.id === eqId);
+    if (!eq) return;
 
-      if (eq.forms.length === 1) {
-        showWorkstation(eq.forms[0].code).catch((er) => toast(er.message, 'err'));
-      } else {
-        openFormSelectorDialog(eq);
-      }
+    const openSingle = (code) => {
+      showWorkstation(code).catch((er) => toast(er.message, 'err'));
     };
 
-    card.addEventListener('click', handlePick);
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handlePick();
-      }
+    const pickForm = () => {
+      openFormSelectorDialog(eq);
+    };
+
+    const btnOpen = card.querySelector('.btn-open-form');
+    if (btnOpen) {
+      btnOpen.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSingle(btnOpen.dataset.code);
+      });
+    }
+
+    const btnPick = card.querySelector('.btn-pick-form');
+    if (btnPick) {
+      btnPick.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pickForm();
+      });
+    }
+
+    card.addEventListener('click', () => {
+      if (eq.forms.length === 1) openSingle(eq.forms[0].code);
+      else pickForm();
     });
   });
 }
@@ -704,7 +882,37 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Tombol Menu Utama (Hub) dari dalam checksheet workstation
+$('#btn-back-hub')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  showPortal();
+});
+
 $('#portal-who')?.addEventListener('click', () => askName(false));
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach((pill) => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach((p) => {
+      p.classList.remove('active');
+    });
+    pill.classList.add('active');
+    ui.filter = pill.dataset.filter || 'all';
+    renderEquipGrid();
+  });
+});
+
+// Search input
+$('#portal-search')?.addEventListener('input', (e) => {
+  ui.search = (e.target.value || '').trim();
+  renderEquipGrid();
+});
+
+// Status filter dropdown
+$('#portal-status-filter')?.addEventListener('change', (e) => {
+  ui.statusFilter = e.target.value || 'all';
+  renderEquipGrid();
+});
 
 const periodChanged = () => { ui.month = Number($('#month').value); ui.year = Number($('#year').value); if (ui.year >= 2000 && ui.year <= 2100) openSheet().catch((er) => toast(er.message, 'err')); };
 $('#month').addEventListener('change', periodChanged);
