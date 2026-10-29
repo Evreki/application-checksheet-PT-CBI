@@ -14,3 +14,4 @@ class ReportPartModel extends Model
         'report_id', 'part_name', 'part_number', 'qty', 'unit',
     ];
 }
+

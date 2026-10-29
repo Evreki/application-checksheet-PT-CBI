@@ -125,3 +125,4 @@ class ReportController extends BaseApiController
         });
     }
 }
+

@@ -20,3 +20,4 @@ class UserModel extends Model
         return $this->where('username', $username)->where('is_active', 1)->first();
     }
 }
+

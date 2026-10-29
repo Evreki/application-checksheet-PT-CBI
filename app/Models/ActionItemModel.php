@@ -16,3 +16,4 @@ class ActionItemModel extends Model
         'decision_by', 'status',
     ];
 }
+

@@ -15,3 +15,4 @@ class AssignmentModel extends Model
         'schedule_date', 'inspection_type', 'status', 'notes',
     ];
 }
+

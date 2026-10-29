@@ -1,6 +1,6 @@
-import { api, getActor, setActor, getCurrentUser, setCurrentUser } from './api.js';
-import { renderSheet, MONTHS, ROLE_LABEL, SYMBOLS, esc, fmtDT, fmtNum, glyph, findAp, outOfLimit } from './render.js';
-import { exportExcel } from './excel.js';
+import { api, getActor, setActor, getCurrentUser, setCurrentUser } from './api.js?v=2.2';
+import { renderSheet, MONTHS, ROLE_LABEL, SYMBOLS, esc, fmtDT, fmtNum, glyph, findAp, outOfLimit } from './render.js?v=2.2';
+import { exportExcel } from './excel.js?v=2.2';
 
 const $ = (s, r = document) => r.querySelector(s);
 const sheetEl = $('#sheet');
@@ -404,7 +404,10 @@ function showLogin() {
   const ws = $('#workstation-view');
   if (pt) { pt.hidden = true; pt.style.setProperty('display', 'none', 'important'); }
   if (ws) { ws.hidden = true; ws.style.setProperty('display', 'none', 'important'); }
-  if (login) { login.style.display = 'flex'; }
+  if (login) { 
+    login.hidden = false;
+    login.style.setProperty('display', 'flex', 'important'); 
+  }
   ui.view = 'login';
 }
 
@@ -412,7 +415,10 @@ function showPortal() {
   const login = $('#login-view');
   const ws = $('#workstation-view');
   const pt = $('#portal-view');
-  if (login) login.style.display = 'none';
+  if (login) {
+    login.hidden = true;
+    login.style.setProperty('display', 'none', 'important');
+  }
   if (ws) { ws.hidden = true; ws.style.setProperty('display', 'none', 'important'); }
   if (pt) {
     pt.hidden = false;
@@ -1469,16 +1475,16 @@ function setupEventListeners() {
   $('#period-prev')?.addEventListener('click', () => shiftPeriod(-1));
   $('#period-next')?.addEventListener('click', () => shiftPeriod(1));
 
-  $('#zoom-in').onclick = () => setZoom(ui.zoom + 0.1);
-  $('#zoom-out').onclick = () => setZoom(ui.zoom - 0.1);
-  $('#zoom-fit').onclick = fit;
-  $('#btn-print').onclick = () => window.print();
-  $('#btn-excel').onclick = () => {
+  const zIn = $('#zoom-in'); if (zIn) zIn.onclick = () => setZoom(ui.zoom + 0.1);
+  const zOut = $('#zoom-out'); if (zOut) zOut.onclick = () => setZoom(ui.zoom - 0.1);
+  const zFit = $('#zoom-fit'); if (zFit) zFit.onclick = fit;
+  const bPrint = $('#btn-print'); if (bPrint) bPrint.onclick = () => window.print();
+  const bExcel = $('#btn-excel'); if (bExcel) bExcel.onclick = () => {
     if (!S) return toast('Data belum siap untuk diekspor', 'err');
     exportExcel(S);
     toast('File Excel berhasil diunduh ✔', 'ok');
   };
-  $('#who').onclick = () => askName(false);
+  const bWho = $('#who'); if (bWho) bWho.onclick = () => askName(false);
   $('#sync')?.addEventListener('click', async () => {
     if (ui.busy) return;
     setSync('busy', 'Sync…');

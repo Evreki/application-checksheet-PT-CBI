@@ -16,3 +16,4 @@ class ReportModel extends Model
         'leader_approval_by', 'leader_approval_at',
     ];
 }
+

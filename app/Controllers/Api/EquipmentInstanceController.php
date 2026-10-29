@@ -32,3 +32,4 @@ class EquipmentInstanceController extends BaseApiController
         });
     }
 }
+

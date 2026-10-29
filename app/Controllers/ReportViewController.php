@@ -34,3 +34,4 @@ class ReportViewController extends BaseController
         ]);
     }
 }
+

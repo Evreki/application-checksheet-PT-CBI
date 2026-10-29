@@ -15,3 +15,4 @@ class EquipmentInstanceModel extends Model
         'building', 'room_location', 'photo_url', 'is_active', 'sort_order',
     ];
 }
+

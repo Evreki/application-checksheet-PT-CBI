@@ -14,10 +14,21 @@
     </div>
 </div>
 
+<script>
+// Failsafe Watchdog: Jamin layar loading (splash) otomatis tertutup maksimal 1.8 detik
+setTimeout(function() {
+    var s = document.getElementById('splash');
+    if (s && !s.classList.contains('done')) {
+        s.classList.add('done');
+        setTimeout(function() { try { s.remove(); } catch(e){} }, 400);
+    }
+}, 1800);
+</script>
+
 <!-- ========================================================================= -->
-/* 0. INDUSTRIAL LOGIN SCREEN (AUTH SYSTEM)                                    */
+<!-- 0. INDUSTRIAL LOGIN SCREEN (AUTH SYSTEM)                                  -->
 <!-- ========================================================================= -->
-<div id="login-view" style="display:none;">
+<div id="login-view">
     <div class="login-container">
         <!-- Left: Industrial Branding & Trial Info -->
         <div class="login-left-banner">
@@ -97,7 +108,7 @@
 <!-- ========================================================================= -->
 <!-- 1. PORTAL HUB / LANDING PAGE — DUAL-TONE INDUSTRIAL CATALOG                -->
 <!-- ========================================================================= -->
-<div id="portal-view">
+<div id="portal-view" style="display:none;">
     <!-- Top White Navigation Bar -->
     <header class="portal-nav-bar no-print">
         <div class="portal-nav-inner">
