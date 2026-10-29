@@ -4,14 +4,16 @@ namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
 
-/** Master template persis seperti file Daily_Checksheet_Utility (CT & Scrubber). Idempotent. */
+/** Master template dan seed data PT. Century Batteries Indonesia. Idempotent. */
 class ChecksheetSeeder extends Seeder
 {
     public function run(): void
     {
         $common = ['department' => 'Maintenance', 'section' => 'Utility', 'form_no' => 'Form-PLS-MTC-D08', 'revision' => '0', 'page_info' => '1 dari 1'];
 
-        // [no, bagian, metode, standar, instruksi, accepts_value, unit, min, max, calc, refs]
+        // =========================================================================
+        // 1. COOLING TOWER
+        // =========================================================================
         $this->seedTemplate($common + [
             'code' => 'CT', 'machine_type' => 'Cooling Tower', 'sort_order' => 1,
             'hints' => json_encode(['Inlet Temp (°C)', 'Outlet Temp (°C)', 'ΔT (°C)', 'Level Basin', 'Make-up Valve', 'Fan & Motor', 'Getaran Fan', 'Distribusi Air', 'Kualitas Air', 'Kebocoran / Overflow', 'Catatan'], JSON_UNESCAPED_UNICODE),
@@ -28,6 +30,9 @@ class ChecksheetSeeder extends Seeder
             [10, 'Kebocoran/overflow', 'Cek Visual', 'tidak ada', 'C', 0, null, null, null, null, null],
         ]);
 
+        // =========================================================================
+        // 2. SCRUBBER
+        // =========================================================================
         $this->seedTemplate($common + [
             'code' => 'SCR', 'machine_type' => 'Scrubber', 'sort_order' => 2,
             'hints' => json_encode(['pH', 'Flow (m3/h)', 'Pressure Drop', 'Level Tank (%)', 'Suhu (°C)', 'Pompa', 'Nozzle', 'Packing', 'Fan/Blower', 'Ducting', 'Kebocoran', 'Dosing Chemical', 'Sludge'], JSON_UNESCAPED_UNICODE),
@@ -44,7 +49,9 @@ class ChecksheetSeeder extends Seeder
             [10, 'Kondisi lumpur tanki', 'Cek Visual', 'max 10%', 'C', 1, '%', null, 10, null, null],
         ]);
 
-        // CHILLER LSBLG250 - Harian & Mingguan
+        // =========================================================================
+        // 3. CHILLER LSBLG250 - Harian & Mingguan
+        // =========================================================================
         $this->seedTemplate([
             'department'   => 'Maintenance',
             'section'      => 'WET CHARGING',
@@ -56,14 +63,12 @@ class ChecksheetSeeder extends Seeder
             'sort_order'   => 3,
             'hints'        => json_encode(['High Press Indikator', 'Low press Indikator', 'Cooling Tower', 'Valve In Out Cooling', 'Running Hour', '% Running', 'Emergency Stop', 'Kebocoran Freon', 'Kebersihan Mesin', 'Check Ampere Motor', 'Pompa Tranfer'], JSON_UNESCAPED_UNICODE),
         ], [
-            // Daily Check items (1-6)
             [1, 'High Press Indikator', 'Check', 'P STD < 150 PSI', 'C', 1, 'PSI', null, 150, null, null, '1x/day'],
             [2, 'Low press Indikator', 'Check', 'P STD 80 > 60 PSI', 'C', 1, 'PSI', 60, 80, null, null, '1x/day'],
             [3, 'Cooling Tower', 'Check', 'BERFUNGSI NORMAL', 'C', 0, null, null, null, null, null, '1x/day'],
             [4, 'Valve In Out Cooling', 'Check', 'TIDAK MAMAPET/KOTOR', 'C', 0, null, null, null, null, null, '1x/day'],
             [5, 'Running Hour', 'Check', 'CATAT DARI DIPSLAY', 'C', 1, 'Jam', null, null, null, null, '1x/day'],
             [6, '% Running', 'Check', 'CATAT DARI DISPLAY 50 %,75%,100%', 'C', 1, '%', null, null, null, null, '1x/day'],
-            // Weekly Preventive items (7-11)
             [7, 'Emergency Stop', 'Check', 'Cek Kondisi Push Button', 'C', 0, null, null, null, null, null, '1x/Week'],
             [8, 'Kebocoran Freon', 'Check', 'Tidak ada Rembesan Oli /freon', 'C', 0, null, null, null, null, null, '1x/Week'],
             [9, 'Kebersihan Mesin', 'Bersihkan', 'Tidak ada korosi dan genangan Air', 'B', 0, null, null, null, null, null, '1x/Week'],
@@ -71,7 +76,9 @@ class ChecksheetSeeder extends Seeder
             [11, 'Pompa Tranfer', 'Check', 'Tidak ada bocor & vibrasi', 'C', 0, null, null, null, null, null, '1x/Week'],
         ]);
 
-        // CHILLER LSBLG250 - Bulanan & Berkala
+        // =========================================================================
+        // 4. CHILLER LSBLG250 - Bulanan & Berkala
+        // =========================================================================
         $this->seedTemplate([
             'department'   => 'Maintenance',
             'section'      => 'Utility',
@@ -103,7 +110,9 @@ class ChecksheetSeeder extends Seeder
             [18, 'Vibrasi Mesin', 'Cek', null, 'C', 1, 'mm/s', null, 4.5, null, null, '1/4 Bln'],
         ]);
 
-        // CHILLER LSBLG250 - Standard Preventive Machine (STD)
+        // =========================================================================
+        // 5. CHILLER LSBLG250 - Standard Preventive Machine (STD)
+        // =========================================================================
         $this->seedTemplate([
             'department'   => 'PLANT SERVICE',
             'section'      => 'WET CHARGING',
@@ -135,6 +144,137 @@ class ChecksheetSeeder extends Seeder
             [18, 'Temperature Screw Kompresor', 'Cek', 'Pengecekan Temp Kompresor', 'C', 0, null, null, null, null, null, '1/4 Bln'],
             [19, 'Vibrasi Mesin', 'Cek', 'Pengecekan Mounting dan vibrasi', 'C', 0, null, null, null, null, null, '1/4 Bln'],
         ]);
+
+        // =========================================================================
+        // 6. AIR DRYER ACT80 - Harian & Mingguan (Daily & Weekly)
+        // =========================================================================
+        $this->seedTemplate([
+            'department'   => 'PLANT SERVICE',
+            'section'      => 'MAINTENANCE UTILITY',
+            'form_no'      => 'Form-PLS-MTC-D08',
+            'revision'     => '0',
+            'page_info'    => '1 dari 1',
+            'code'         => 'AD_D',
+            'machine_type' => 'AIR DRYER FRIULAIR ACT80',
+            'sort_order'   => 6,
+            'hints'        => json_encode(['Indikator Power', 'Due point Indikator', 'Temperature Kerja', 'Kompresor', 'Fan Kondenser', 'Auto Drain', 'EMERGENCY STOP', 'BODY MESIN', 'FILTER KONDENSOR', 'CHECK KEBOCORAN ANGIN', 'PRE FILTER DRYER FTX', 'AFTER FILTER DRYER FTS'], JSON_UNESCAPED_UNICODE),
+        ], [
+            // Daily Check (1 - 6)
+            [1, 'Indikator Power', 'Cek', 'Lampu menyala', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [2, 'Due point Indikator', 'Cek', 'Tidak ada indikator alarm menyala', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [3, 'Temperature Kerja', 'Cek', '70 s/d 100 °C', 'C', 1, '°C', 70, 100, null, null, '1x/Day'],
+            [4, 'Kompresor', 'Fungsi', 'Running tanpa vibrasi berlebih', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [5, 'Fan Kondenser', 'Fungsi', 'Running tanpa vibrasi', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [6, 'Auto Drain', 'Fungsi', 'Membuang air kondensasi secara normal', 'C', 0, null, null, null, null, null, '1x/Day'],
+            // Weekly Preventive (7 - 13)
+            [7, 'Emergency Stop', 'Fungsi', 'Emergency berfungsi baik saat ditekan', 'C', 0, null, null, null, null, null, '1x/Week'],
+            [8, 'Body Mesin', 'Kebersihan', 'Body mesin bersih dari debu/oli', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [9, 'Filter Kondensor', 'Kebersihan', 'Tidak kotor / berdebu', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [10, 'Check Kebocoran Angin', 'Kondisi', 'Tidak ada udara bocor pada pipa koneksi', 'C', 0, null, null, null, null, null, '1x/Week'],
+            [11, 'Pre Filter Dryer FTX', 'Kebersihan', 'Bersihkan filter cartridge', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [12, 'After Filter Dryer FTS', 'Kebersihan', 'Bersihkan filter cartridge', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [13, 'Auto Drain Weekly', 'Kebersihan', 'Bersihkan saringan dan discharge pipa', 'B', 0, null, null, null, null, null, '1x/Week'],
+        ]);
+
+        // =========================================================================
+        // 7. AIR DRYER ACT80 - Overhaul & Berkala (Form-PLS-MTC-D09)
+        // =========================================================================
+        $this->seedTemplate([
+            'department'   => 'Maintenance',
+            'section'      => 'Utility',
+            'form_no'      => 'Form-PLS-MTC-D09',
+            'revision'     => '0',
+            'page_info'    => '1 dari 1',
+            'code'         => 'AD_M',
+            'machine_type' => 'AIR DRYER FRIULAIR ACT80',
+            'sort_order'   => 7,
+            'hints'        => json_encode(['Pre Filter Dryer FTX', 'After Filter Dryer FTS', 'Tekanan Freon', 'Kondenser Dry Cleaning', 'Kondenser Wet Cleaning'], JSON_UNESCAPED_UNICODE),
+        ], [
+            [1, 'Pre Filter Dryer FTX', 'Pergantian', 'Ganti filter cartridge element', 'G', 0, null, null, null, null, null, '1x/6 bln'],
+            [2, 'After Filter Dryer FTS', 'Pergantian', 'Ganti filter cartridge element', 'G', 0, null, null, null, null, null, '1x/6 bln'],
+            [3, 'Tekanan Freon', 'Cek', 'Tekanan freon dalam batas aman operasi', 'U', 1, 'bar', null, null, null, null, '1x/3 bln'],
+            [4, 'Kondenser', 'Dry Cleaning', 'Pembersihan kisi kondenser kering', 'B', 0, null, null, null, null, null, '1x/bln'],
+            [5, 'Kondenser', 'Wet Cleaning', 'Pembersihan basah chemical', 'B', 0, null, null, null, null, null, '1x/6 bln'],
+        ]);
+
+        // =========================================================================
+        // 8. AIR DRYER ACT80 - Standard Preventive Machine (STD)
+        // =========================================================================
+        $this->seedTemplate([
+            'department'   => 'PLANT SERVICE',
+            'section'      => 'MAINTENANCE',
+            'form_no'      => 'Form-PLS-MTC-D04',
+            'revision'     => '0',
+            'page_info'    => '1 dari 1',
+            'code'         => 'AD_S',
+            'machine_type' => 'AIR DRYER FRIULAIR ACT55/80',
+            'sort_order'   => 8,
+            'hints'        => json_encode(['Indikator Power', 'Due point Indikator', 'Emergency Stop', 'Body Mesin', 'Temperatur Kerja', 'Kebocoran Angin', 'Filter Kondensor', 'Kompresor', 'Fan Kondensor', 'Pre Filter Dryer', 'After Filter Dryer', 'Auto Drain'], JSON_UNESCAPED_UNICODE),
+        ], [
+            [1, 'Indikator Power', 'Kondisi', 'Lampu Menyala', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [2, 'Due point Indikator', 'Kondisi', 'Tidak Ada Indikator Alarm Menyala', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [3, 'Emergency Stop', 'Fungsi', 'Emergency Berfungsi', 'C', 0, null, null, null, null, null, '1x/Week'],
+            [4, 'Body Mesin', 'Kebersihan', 'Body Mesin Bersih', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [5, 'Temperatur Kerja', 'Kondisi', '70 s/d 100 °C', 'C', 1, '°C', 70, 100, null, null, '1x/Day'],
+            [6, 'Check Kebocoran Angin', 'Kondisi', 'Tidak Ada Udara Bocor Pada Pipa', 'C', 0, null, null, null, null, null, '1x/Week'],
+            [7, 'Filter Kondensor', 'Kebersihan', 'Tidak Kotor / Berdebu', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [8, 'Kompresor', 'Fungsi', 'Running Tanpa Vibrasi', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [9, 'Fan Kondensor', 'Fungsi', 'Running Tanpa Vibrasi', 'C', 0, null, null, null, null, null, '1x/Day'],
+            [10, 'Pre Filter Dryer', 'Kebersihan', 'Bersihkan Filter Cartridge', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [11, 'Pre Filter Dryer', 'Pergantian', 'Ganti Filter Cartridge Element', 'G', 0, null, null, null, null, null, '1x/6 bulan'],
+            [12, 'After Filter Dryer', 'Kebersihan', 'Bersihkan Filter Cartridge', 'B', 0, null, null, null, null, null, '1x/Week'],
+            [13, 'After Filter Dryer', 'Pergantian', 'Ganti Filter Cartridge Element', 'G', 0, null, null, null, null, null, '1x/6 bulan'],
+            [14, 'Auto Drain', 'Fungsi', 'Bersihkan & Berfungsi Normal', 'C', 0, null, null, null, null, null, '1x/Day'],
+        ]);
+
+        // =========================================================================
+        // 9. SEED PENGGUNA (TRIAL: 1 LEADER + 2 USER) - PASSWORD: 12345
+        // =========================================================================
+        $now = date('Y-m-d H:i:s');
+        $pwd = password_hash('12345', PASSWORD_DEFAULT);
+
+        $users = [
+            ['username' => 'leader', 'password_hash' => $pwd, 'full_name' => 'Bambang Sutrisno', 'role' => 'leader', 'department' => 'Maintenance', 'section' => 'Utility', 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['username' => 'user1',  'password_hash' => $pwd, 'full_name' => 'Ahmad Subarjo',   'role' => 'user',   'department' => 'Maintenance', 'section' => 'Utility', 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['username' => 'user2',  'password_hash' => $pwd, 'full_name' => 'Budi Triawan',    'role' => 'user',   'department' => 'Maintenance', 'section' => 'Electrical', 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+        ];
+
+        foreach ($users as $u) {
+            $exist = $this->db->table('cs_users')->where('username', $u['username'])->get()->getRowArray();
+            if ($exist) {
+                $this->db->table('cs_users')->where('id', $exist['id'])->update($u);
+            } else {
+                $this->db->table('cs_users')->insert($u);
+            }
+        }
+
+        // =========================================================================
+        // 10. SEED MULTI-INSTANCE EQUIPMENT (GEDUNG A, GEDUNG B, GEDUNG C)
+        // =========================================================================
+        $instances = [
+            // Air Dryer ACT80 Instances
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-001', 'instance_name' => 'Air Dryer Friulair #1', 'building' => 'Gedung A', 'room_location' => 'Ruang Kompresor Utama Gedung A', 'sort_order' => 1, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-002', 'instance_name' => 'Air Dryer Friulair #2', 'building' => 'Gedung B', 'room_location' => 'Sub-Station Assembly Gedung B', 'sort_order' => 2, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-003', 'instance_name' => 'Air Dryer Friulair #3', 'building' => 'Gedung C', 'room_location' => 'Area Wet Charging Gedung C', 'sort_order' => 3, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            
+            // Chiller LSBLG250 Instances
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-001', 'instance_name' => 'Chiller Sentral #1', 'building' => 'Gedung A', 'room_location' => 'Chiller Plant Ruang Utama A', 'sort_order' => 4, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-002', 'instance_name' => 'Chiller Sentral #2', 'building' => 'Gedung B', 'room_location' => 'Sub Chiller Plant Gedung B', 'sort_order' => 5, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-003', 'instance_name' => 'Chiller Sentral #3', 'building' => 'Gedung C', 'room_location' => 'Ruang Chiller Standby Gedung C', 'sort_order' => 6, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+
+            // Cooling Tower & Scrubber
+            ['equipment_group' => 'cooling-tower', 'template_code' => 'CT', 'instance_code' => 'CT-001', 'instance_name' => 'Cooling Tower Utama #1', 'building' => 'Gedung A', 'room_location' => 'Rooftop Utility Gedung A', 'sort_order' => 7, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'scrubber',      'template_code' => 'SCR', 'instance_code' => 'SCR-001', 'instance_name' => 'Scrubber Kimia #1', 'building' => 'Gedung A', 'room_location' => 'Exhaust Area Outdoor Gedung A', 'sort_order' => 8, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+        ];
+
+        foreach ($instances as $ins) {
+            $exist = $this->db->table('cs_equipment_instances')->where('instance_code', $ins['instance_code'])->get()->getRowArray();
+            if ($exist) {
+                $this->db->table('cs_equipment_instances')->where('id', $exist['id'])->update($ins);
+            } else {
+                $this->db->table('cs_equipment_instances')->insert($ins);
+            }
+        }
     }
 
     private function seedTemplate(array $tpl, array $rows): void
