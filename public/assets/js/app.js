@@ -1,6 +1,6 @@
-import { api, getActor, setActor, getCurrentUser, setCurrentUser } from './api.js?v=2.2';
-import { renderSheet, MONTHS, ROLE_LABEL, SYMBOLS, esc, fmtDT, fmtNum, glyph, findAp, outOfLimit } from './render.js?v=2.2';
-import { exportExcel } from './excel.js?v=2.2';
+import { api, getActor, setActor, getCurrentUser, setCurrentUser } from './api.js?v=2.3';
+import { renderSheet, MONTHS, ROLE_LABEL, SYMBOLS, esc, fmtDT, fmtNum, glyph, findAp, outOfLimit } from './render.js?v=2.3';
+import { exportExcel } from './excel.js?v=2.3';
 
 const $ = (s, r = document) => r.querySelector(s);
 const sheetEl = $('#sheet');
@@ -429,13 +429,15 @@ function showPortal() {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   updatePortalKPIs();
   loadActionCounts();
+  loadUserTasks(false);
 }
 
 function updatePortalKPIs() {
   const kpiTot = $('#kpi-total-machines');
   const kpiAct = $('#kpi-active-forms');
-  if (kpiTot) kpiTot.textContent = EQUIPMENT_CATALOG.length;
-  if (kpiAct) kpiAct.textContent = '2 Mesin (Chiller & Air Dryer)';
+  const allUnits = getAllInstances();
+  if (kpiTot) kpiTot.textContent = `${EQUIPMENT_CATALOG.length} Tipe (${allUnits.length} Unit)`;
+  if (kpiAct) kpiAct.textContent = 'Chiller & Air Dryer (STD)';
 }
 
 async function showWorkstation(tplCode) {
@@ -508,7 +510,7 @@ function initStagePanning() {
   });
 }
 
-// ------------------------------------------------------------------ Live Clock & Time-Boxing
+// ------------------------------------------------------------------ Live Clock & Time Display
 function startClock() {
   const update = () => {
     const portalEl = $('#portal-clock-txt');
@@ -522,113 +524,38 @@ function startClock() {
     const dMin = String(now.getMinutes()).padStart(2, '0');
     const formatted = `${dName}, ${dDate} ${dMon} ${dYr} • ${dHr}:${dMin} WIB`;
     if (portalEl) portalEl.textContent = formatted;
-
-    // Time-boxing evaluation:
-    // 07:30 - 10:00: CHECK TIME
-    // 10:00 - 14:00: ACTION TIME
-    // 14:00 - 16:00: REPORT TIME
-    const mins = now.getHours() * 60 + now.getMinutes();
-    const pill = $('#timebox-pill');
-    const label = $('#timebox-label');
-    if (pill && label) {
-      if (mins >= 450 && mins < 600) { // 07:30 - 10:00
-        pill.className = 'timebox-badge timebox-check';
-        label.textContent = '07:30 - 10:00: CHECK TIME (Inspeksi Aktif)';
-      } else if (mins >= 600 && mins < 840) { // 10:00 - 14:00
-        pill.className = 'timebox-badge timebox-action';
-        label.textContent = '10:00 - 14:00: ACTION TIME (Penanganan NG)';
-      } else if (mins >= 840 && mins < 960) { // 14:00 - 16:00
-        pill.className = 'timebox-badge timebox-report';
-        label.textContent = '14:00 - 16:00: REPORTING TIME (Pelaporan)';
-      } else {
-        pill.className = 'timebox-badge timebox-check';
-        label.textContent = 'STANDBY / MONITORING';
-      }
-    }
   };
   update();
   setInterval(update, 15000);
 }
 
-// ------------------------------------------------------------------ Equipment Multi-Instance Catalog
+// ------------------------------------------------------------------ Consolidated Equipment Catalog
 const getAssetBase = () => (window.CS?.baseUrl || document.querySelector('meta[name="base-url"]')?.content || '').replace(/\/+$/, '');
 
 const EQUIPMENT_CATALOG = [
-  // 1. AIR DRYER FRIULAIR ACT80 (3 INSTANCES)
+  // 1. AIR DRYER FRIULAIR ACT80 (Consolidated Machine Type)
   {
-    id: 'air-dryer-1',
+    id: 'air-dryer',
     group: 'air-dryer',
-    title: 'Air Dryer Friulair ACT80 (#1)',
-    instanceCode: 'AD-001',
-    building: 'Gedung A',
-    location: 'Ruang Kompresor Utama Gedung A',
-    assetId: 'ID: AD-001 • Gedung A',
+    title: 'Air Dryer Friulair ACT80',
+    typeLabel: 'Air Dryer',
+    assetId: 'Air Dryer • 3 Unit Terpasang',
     lastStatus: 'Standar Preventif STD',
     hasStd: true,
     img: `${getAssetBase()}/assets/img/machines/air_dryer.png`,
     deptBadges: [
-      { text: 'Gedung A', bg: '#0369a1' },
       { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
+      { text: '⭐ STD PREVENTIVE', bg: '#15803d' },
+      { text: '3 Gedung (A, B, C)', bg: '#0369a1' }
     ],
     sections: ['Utility', 'Maintenance', 'PLANT SERVICE'],
     badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
     desc: 'Pengering udara tekan sistem refrigerasi Friulair ACT80. Pengawasan suhu kerja (70-100°C), dew point, dan filter cartridge.',
-    scheduleType: 'multi',
-    scheduleItems: ['Daily & Weekly (Harian)', 'Overhaul & Berkala', 'Standard Preventive Master'],
-    forms: [
-      { code: 'AD_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'Indikator Power, Dew Point, Suhu Kerja, Kompresor, Fan, Filter FTX/FTS', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'Utility' },
-      { code: 'AD_M', title: 'Overhaul & Berkala (Form D09)', sub: 'Pre/After Filter Replacement, Tekanan Freon, Dry & Wet Cleaning Kondenser', period: '1-6 Bulan', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
-      { code: 'AD_S', title: 'Standard Preventive Machine (STD)', sub: 'Master SOP perawatan, standar parameter operasi, instruksi kerja Form-PLS-MTC-D04', period: 'Standar Acuan', formNo: 'Form-PLS-MTC-D04', section: 'Maintenance' },
-    ]
-  },
-  {
-    id: 'air-dryer-2',
-    group: 'air-dryer',
-    title: 'Air Dryer Friulair ACT80 (#2)',
-    instanceCode: 'AD-002',
-    building: 'Gedung B',
-    location: 'Sub-Station Assembly Gedung B',
-    assetId: 'ID: AD-002 • Gedung B',
-    lastStatus: 'Standar Preventif STD',
-    hasStd: true,
-    img: `${getAssetBase()}/assets/img/machines/air_dryer.png`,
-    deptBadges: [
-      { text: 'Gedung B', bg: '#b45309' },
-      { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
+    units: [
+      { code: 'AD-001', building: 'Gedung A', location: 'Ruang Kompresor Utama Gedung A' },
+      { code: 'AD-002', building: 'Gedung B', location: 'Sub-Station Assembly Gedung B' },
+      { code: 'AD-003', building: 'Gedung C', location: 'Area Wet Charging Gedung C' }
     ],
-    sections: ['Utility', 'Maintenance', 'PLANT SERVICE'],
-    badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
-    desc: 'Unit Air Dryer Friulair ACT80 pendukung lini Assembly Gedung B. Memastikan suplai udara instrumen bebas uap air dan minyak.',
-    scheduleType: 'multi',
-    scheduleItems: ['Daily & Weekly (Harian)', 'Overhaul & Berkala', 'Standard Preventive Master'],
-    forms: [
-      { code: 'AD_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'Indikator Power, Dew Point, Suhu Kerja, Kompresor, Fan, Filter FTX/FTS', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'Utility' },
-      { code: 'AD_M', title: 'Overhaul & Berkala (Form D09)', sub: 'Pre/After Filter Replacement, Tekanan Freon, Dry & Wet Cleaning Kondenser', period: '1-6 Bulan', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
-      { code: 'AD_S', title: 'Standard Preventive Machine (STD)', sub: 'Master SOP perawatan, standar parameter operasi, instruksi kerja Form-PLS-MTC-D04', period: 'Standar Acuan', formNo: 'Form-PLS-MTC-D04', section: 'Maintenance' },
-    ]
-  },
-  {
-    id: 'air-dryer-3',
-    group: 'air-dryer',
-    title: 'Air Dryer Friulair ACT80 (#3)',
-    instanceCode: 'AD-003',
-    building: 'Gedung C',
-    location: 'Area Wet Charging Gedung C',
-    assetId: 'ID: AD-003 • Gedung C',
-    lastStatus: 'Standar Preventif STD',
-    hasStd: true,
-    img: `${getAssetBase()}/assets/img/machines/air_dryer.png`,
-    deptBadges: [
-      { text: 'Gedung C', bg: '#6b21a8' },
-      { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
-    ],
-    sections: ['Utility', 'Maintenance', 'WET CHARGING'],
-    badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
-    desc: 'Unit Air Dryer Friulair ACT80 area Wet Charging Gedung C. Mendukung sistem otomatisasi pengisian asam dan formasi baterai.',
-    scheduleType: 'multi',
     scheduleItems: ['Daily & Weekly (Harian)', 'Overhaul & Berkala', 'Standard Preventive Master'],
     forms: [
       { code: 'AD_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'Indikator Power, Dew Point, Suhu Kerja, Kompresor, Fan, Filter FTX/FTS', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'Utility' },
@@ -637,81 +564,29 @@ const EQUIPMENT_CATALOG = [
     ]
   },
 
-  // 2. CHILLER LSBLG250 (3 INSTANCES)
+  // 2. CHILLER LSBLG250 (Consolidated Machine Type)
   {
-    id: 'chiller-1',
+    id: 'chiller',
     group: 'chiller',
-    title: 'Chiller LSBLG250 (#1)',
-    instanceCode: 'CH-001',
-    building: 'Gedung A',
-    location: 'Chiller Plant Ruang Utama Gedung A',
-    assetId: 'ID: CH-001 • Gedung A',
+    title: 'Chiller Trane LSBLG250',
+    typeLabel: 'Water Chiller',
+    assetId: 'Chiller • 3 Unit Terpasang',
     lastStatus: 'Standar Preventif STD',
     hasStd: true,
     img: `${getAssetBase()}/assets/img/machines/chiller.jpg`,
     deptBadges: [
-      { text: 'Gedung A', bg: '#0369a1' },
       { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
+      { text: '⭐ STD PREVENTIVE', bg: '#15803d' },
+      { text: '3 Gedung (A, B, C)', bg: '#0369a1' }
     ],
     sections: ['Utility', 'Maintenance', 'WET CHARGING', 'PLANT SERVICE'],
     badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
-    desc: 'Sistem pendingin sentral utama pabrik. Dilengkapi checklist harian, mingguan, serta inspeksi berkala.',
-    scheduleType: 'multi',
-    scheduleItems: ['Harian & Mingguan', 'Bulanan & Berkala', 'Standard Preventive Master'],
-    forms: [
-      { code: 'CHILLER_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'High/Low Press Indikator, Suhu CT, Running Hour, % Running, E-Stop, Freon', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'WET CHARGING' },
-      { code: 'CHILLER_M', title: 'Bulanan & Berkala (Monthly Preventive)', sub: 'Panel Kontrol, Filter Core Dryer, Selenoid & Expansion Valve, Kondensor, Evaporator', period: 'Bulanan & Berkala', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
-      { code: 'CHILLER_S', title: 'Standard Preventive Machine (STD)', sub: 'Master parameter acuan, foto & posisi komponen, frekuensi & instruksi Form-PLS-MTC-D04', period: 'Standar Master Acuan', formNo: 'Form-PLS-MTC-D04', section: 'WET CHARGING' },
-    ]
-  },
-  {
-    id: 'chiller-2',
-    group: 'chiller',
-    title: 'Chiller LSBLG250 (#2)',
-    instanceCode: 'CH-002',
-    building: 'Gedung B',
-    location: 'Sub Chiller Plant Gedung B',
-    assetId: 'ID: CH-002 • Gedung B',
-    lastStatus: 'Standar Preventif STD',
-    hasStd: true,
-    img: `${getAssetBase()}/assets/img/machines/chiller.jpg`,
-    deptBadges: [
-      { text: 'Gedung B', bg: '#b45309' },
-      { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
+    desc: 'Sistem pendingin sentral utama pabrik CBI. Dilengkapi checklist harian, mingguan, serta inspeksi berkala.',
+    units: [
+      { code: 'CH-001', building: 'Gedung A', location: 'Chiller Plant Ruang Utama Gedung A' },
+      { code: 'CH-002', building: 'Gedung B', location: 'Sub Chiller Plant Gedung B' },
+      { code: 'CH-003', building: 'Gedung C', location: 'Ruang Chiller Standby Gedung C' }
     ],
-    sections: ['Utility', 'Maintenance', 'WET CHARGING', 'PLANT SERVICE'],
-    badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
-    desc: 'Unit Chiller LSBLG250 Sub-Plant Gedung B. Suplai sirkulasi air dingin mesin cetak grid dan assembly.',
-    scheduleType: 'multi',
-    scheduleItems: ['Harian & Mingguan', 'Bulanan & Berkala', 'Standard Preventive Master'],
-    forms: [
-      { code: 'CHILLER_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'High/Low Press Indikator, Suhu CT, Running Hour, % Running, E-Stop, Freon', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'WET CHARGING' },
-      { code: 'CHILLER_M', title: 'Bulanan & Berkala (Monthly Preventive)', sub: 'Panel Kontrol, Filter Core Dryer, Selenoid & Expansion Valve, Kondensor, Evaporator', period: 'Bulanan & Berkala', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
-      { code: 'CHILLER_S', title: 'Standard Preventive Machine (STD)', sub: 'Master parameter acuan, foto & posisi komponen, frekuensi & instruksi Form-PLS-MTC-D04', period: 'Standar Master Acuan', formNo: 'Form-PLS-MTC-D04', section: 'WET CHARGING' },
-    ]
-  },
-  {
-    id: 'chiller-3',
-    group: 'chiller',
-    title: 'Chiller LSBLG250 (#3)',
-    instanceCode: 'CH-003',
-    building: 'Gedung C',
-    location: 'Ruang Chiller Standby Gedung C',
-    assetId: 'ID: CH-003 • Gedung C',
-    lastStatus: 'Standar Preventif STD',
-    hasStd: true,
-    img: `${getAssetBase()}/assets/img/machines/chiller.jpg`,
-    deptBadges: [
-      { text: 'Gedung C', bg: '#6b21a8' },
-      { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' }
-    ],
-    sections: ['Utility', 'Maintenance', 'WET CHARGING', 'PLANT SERVICE'],
-    badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
-    desc: 'Unit Chiller cadangan dan pendukung formasi baterai area Wet Charging Gedung C.',
-    scheduleType: 'multi',
     scheduleItems: ['Harian & Mingguan', 'Bulanan & Berkala', 'Standard Preventive Master'],
     forms: [
       { code: 'CHILLER_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'High/Low Press Indikator, Suhu CT, Running Hour, % Running, E-Stop, Freon', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'WET CHARGING' },
@@ -722,13 +597,11 @@ const EQUIPMENT_CATALOG = [
 
   // 3. COOLING TOWER
   {
-    id: 'cooling-tower-1',
+    id: 'cooling-tower',
     group: 'cooling-tower',
-    title: 'Cooling Tower Utama (#1)',
-    instanceCode: 'CT-001',
-    building: 'Gedung A',
-    location: 'Rooftop Utility Gedung A',
-    assetId: 'ID: CT-001 • Gedung A',
+    title: 'Cooling Tower Utama',
+    typeLabel: 'Cooling Tower',
+    assetId: 'Cooling Tower • Gedung A',
     lastStatus: 'Inspeksi Harian',
     hasStd: false,
     img: `${getAssetBase()}/assets/img/machines/cooling_tower.jpg`,
@@ -740,8 +613,10 @@ const EQUIPMENT_CATALOG = [
     sections: ['Utility', 'Maintenance'],
     badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Monitoring sirkulasi air pendingin, temperatur inlet/outlet, motor fan, dan level basin.',
-    scheduleType: 'single',
-    scheduleItem: 'Checksheet Harian (Daily)',
+    units: [
+      { code: 'CT-001', building: 'Gedung A', location: 'Rooftop Utility Gedung A' }
+    ],
+    scheduleItems: ['Checksheet Harian (Daily)'],
     forms: [
       { code: 'CT', title: 'Checksheet Harian (Daily)', sub: 'Inlet/Outlet Temp, ΔT, Basin Level, Motor Ampere, Getaran Fan, pH Air, Kebocoran', period: 'Harian (Setiap Hari)', formNo: 'Form-PLS-MTC-D08', section: 'Utility' }
     ]
@@ -749,13 +624,11 @@ const EQUIPMENT_CATALOG = [
 
   // 4. SCRUBBER
   {
-    id: 'scrubber-1',
+    id: 'scrubber',
     group: 'scrubber',
-    title: 'Scrubber Kimia (#1)',
-    instanceCode: 'SCR-001',
-    building: 'Gedung A',
-    location: 'Exhaust Area Outdoor Gedung A',
-    assetId: 'ID: SCR-001 • Gedung A',
+    title: 'Scrubber Kimia',
+    typeLabel: 'Air Scrubber',
+    assetId: 'Scrubber • Gedung A',
     lastStatus: 'Inspeksi Harian',
     hasStd: false,
     img: `${getAssetBase()}/assets/img/machines/scrubber.jpg`,
@@ -767,20 +640,76 @@ const EQUIPMENT_CATALOG = [
     sections: ['Utility', 'Maintenance'],
     badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Pengawasan sistem penetral emisi udara, pH air sirkulasi, nozzle spray, dan fan blower.',
-    scheduleType: 'single',
-    scheduleItem: 'Checksheet Harian (Daily)',
+    units: [
+      { code: 'SCR-001', building: 'Gedung A', location: 'Exhaust Area Outdoor Gedung A' }
+    ],
+    scheduleItems: ['Checksheet Harian (Daily)'],
     forms: [
       { code: 'SCR', title: 'Checksheet Harian (Daily)', sub: 'pH Air, Flow Pompa, Tekanan Hisap, Level Tangki, Nozzle Spray, Getaran Fan, Sludge', period: 'Harian (Setiap Hari)', formNo: 'Form-PLS-MTC-D08', section: 'Utility' }
     ]
   }
 ];
 
-function openFormSelectorDialog(eq) {
+// Helper: Flatten instances from consolidated catalog
+function getAllInstances() {
+  const list = [];
+  EQUIPMENT_CATALOG.forEach((eq) => {
+    eq.units.forEach((u) => {
+      list.push({
+        code: u.code,
+        name: `${eq.title} - ${u.code}`,
+        building: u.building,
+        location: u.location,
+        machineType: eq.title,
+        group: eq.group,
+        forms: eq.forms,
+        hasStd: eq.hasStd
+      });
+    });
+  });
+  return list;
+}
+
+function openFormSelectorDialog(eq, preselectedUnitCode = null) {
   const dlg = $('#dlg-form-select');
   if (!dlg) return;
-  $('#fsd-title').textContent = `Pilih Formulir ${eq.title}`;
-  $('#fsd-sub').textContent = `Unit: ${eq.instanceCode} • Lokasi: ${eq.location}`;
-  
+  $('#fsd-title').textContent = `Pilih Unit & Formulir ${eq.title}`;
+
+  let currentUnit = (preselectedUnitCode ? eq.units.find((u) => u.code === preselectedUnitCode) : null) || eq.units[0];
+
+  // Step 1: Unit Selector Pills / Cards
+  const unitWrap = $('#fsd-unit-selector-wrap');
+  const unitsGrid = $('#fsd-units-grid');
+  if (unitsGrid) {
+    if (eq.units.length > 1) {
+      if (unitWrap) unitWrap.style.display = 'block';
+      unitsGrid.innerHTML = eq.units.map((u) => `
+        <div class="fsd-unit-card ${u.code === currentUnit.code ? 'active' : ''}" data-code="${esc(u.code)}" role="button" tabindex="0">
+          <div class="code">${esc(u.code)}</div>
+          <div class="bld">${esc(u.building)}</div>
+          <small style="font-size:10px;color:#94a3b8;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(u.location)}</small>
+        </div>
+      `).join('');
+
+      unitsGrid.querySelectorAll('.fsd-unit-card').forEach((card) => {
+        const selectCard = () => {
+          unitsGrid.querySelectorAll('.fsd-unit-card').forEach((c) => c.classList.remove('active'));
+          card.classList.add('active');
+          const code = card.dataset.code;
+          currentUnit = eq.units.find((u) => u.code === code) || eq.units[0];
+          $('#fsd-sub').textContent = `Unit Terpilih: ${currentUnit.code} • ${currentUnit.building} (${currentUnit.location})`;
+        };
+        card.onclick = selectCard;
+        card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCard(); } };
+      });
+    } else {
+      if (unitWrap) unitWrap.style.display = 'none';
+    }
+  }
+
+  $('#fsd-sub').textContent = `Unit Terpilih: ${currentUnit.code} • ${currentUnit.building} (${currentUnit.location})`;
+
+  // Step 2: Forms Options
   const optContainer = $('#fsd-options');
   if (optContainer) {
     optContainer.innerHTML = eq.forms.map((f, idx) => `
@@ -807,6 +736,10 @@ function openFormSelectorDialog(eq) {
       const choose = () => {
         const code = opt.dataset.code;
         dlg.close();
+        // Simpan konteks unit yang dipilih
+        localStorage.setItem('cs_unit_code', currentUnit.code);
+        localStorage.setItem('cs_unit_building', currentUnit.building);
+        localStorage.setItem('cs_unit_location', currentUnit.location);
         showWorkstation(code).catch((er) => toast(er.message, 'err'));
       };
       opt.addEventListener('click', choose);
@@ -828,19 +761,25 @@ function renderEquipGrid() {
   const filterFocus = ui.focusFilter || 'all';
 
   const items = EQUIPMENT_CATALOG.filter((eq) => {
-    // 1. Text Search (Search by Title, ID, Location, Building, or Code)
+    // 1. Text Search (Search by Title, any Unit Code, Location, Building, or Form)
     if (query) {
       const matchTitle = eq.title.toLowerCase().includes(query);
-      const matchId = eq.instanceCode.toLowerCase().includes(query);
-      const matchLoc = eq.location.toLowerCase().includes(query);
-      const matchBld = eq.building.toLowerCase().includes(query);
-      const matchForms = eq.forms.some((f) => f.title.toLowerCase().includes(query) || f.code.toLowerCase().includes(query));
-      if (!matchTitle && !matchId && !matchLoc && !matchBld && !matchForms) return false;
+      const matchUnits = eq.units.some((u) => 
+        u.code.toLowerCase().includes(query) || 
+        u.building.toLowerCase().includes(query) || 
+        u.location.toLowerCase().includes(query)
+      );
+      const matchForms = eq.forms.some((f) => 
+        f.title.toLowerCase().includes(query) || 
+        f.code.toLowerCase().includes(query)
+      );
+      if (!matchTitle && !matchUnits && !matchForms) return false;
     }
 
-    // 2. Building Filter
+    // 2. Building Filter: match if ANY unit is in this building
     if (filterBuilding !== 'all') {
-      if (eq.building !== filterBuilding) return false;
+      const hasUnitInBuilding = eq.units.some((u) => u.building === filterBuilding);
+      if (!hasUnitInBuilding) return false;
     }
 
     // 3. Focus Filter: only show machines that have Standard Preventive (Chiller & Air Dryer)
@@ -851,17 +790,18 @@ function renderEquipGrid() {
     return true;
   });
 
+  const allUnits = getAllInstances();
   const countMsg = $('#equip-count-msg');
   if (countMsg) {
-    countMsg.textContent = `Menampilkan ${items.length} dari ${EQUIPMENT_CATALOG.length} unit mesin (CBI Maintenance)`;
+    countMsg.textContent = `Menampilkan ${items.length} tipe mesin (${allUnits.length} total unit terpasang CBI)`;
   }
 
   if (!items.length) {
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; background:#fff; border-radius:16px; padding:48px 20px; text-align:center; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
         <svg style="width:48px;height:48px;color:#94a3b8;margin:0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        <h3 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 4px;">Tidak ada unit peralatan yang cocok</h3>
-        <p style="font-size:12px;color:#64748b;margin:0;">Coba ganti filter gedung atau gunakan kata kunci pencarian ID lain.</p>
+        <h3 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 4px;">Tidak ada mesin yang sesuai kriteria</h3>
+        <p style="font-size:12px;color:#64748b;margin:0;">Coba ubah filter gedung atau gunakan kata kunci pencarian lain.</p>
       </div>
     `;
     return;
@@ -879,7 +819,7 @@ function renderEquipGrid() {
           >
           <div class="asset-overlay-badge">
             <div class="asset-id">${esc(eq.assetId)}</div>
-            <div class="asset-status">${esc(eq.location)}</div>
+            <div class="asset-status">${esc(eq.typeLabel || 'Mesin Pabrik')}</div>
           </div>
         </div>
 
@@ -906,10 +846,24 @@ function renderEquipGrid() {
             ${esc(eq.desc)}
           </p>
 
-          <!-- Schedule & Location Box -->
+          <!-- Unit Instances Pills -->
+          <div class="card-unit-chips-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
+            Unit Terpasang (${eq.units.length} Lokasi):
+          </div>
+          <div class="card-unit-chips-wrap">
+            ${eq.units.map((u) => `
+              <span class="unit-chip-tag" title="${esc(u.location)}">
+                <span class="dot"></span>
+                <strong>${esc(u.code)}</strong> &bull; ${esc(u.building)}
+              </span>
+            `).join('')}
+          </div>
+
+          <!-- Schedule & Period Box -->
           <div class="card-schedule-box">
             <div class="schedule-multi-row">
-              ${(eq.scheduleItems || [eq.scheduleItem]).map((s) => `
+              ${eq.scheduleItems.map((s) => `
                 <div class="schedule-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 13l4 4L19 7" />
@@ -924,14 +878,14 @@ function renderEquipGrid() {
 
       <!-- Card Footer CTA Button -->
       <div class="card-footer">
-        ${eq.forms.length === 1 ? `
-          <button type="button" class="btn-cta-crimson btn-open-form" data-code="${esc(eq.forms[0].code)}">
-            <span>Buka Checksheet (${esc(eq.instanceCode)})</span>
+        ${eq.units.length === 1 && eq.forms.length === 1 ? `
+          <button type="button" class="btn-cta-crimson btn-open-single" data-code="${esc(eq.forms[0].code)}" data-unit="${esc(eq.units[0].code)}">
+            <span>Buka Checksheet (${esc(eq.units[0].code)})</span>
             <span class="cta-arrow">&rarr;</span>
           </button>
         ` : `
           <button type="button" class="btn-cta-dark btn-pick-form" data-eq-id="${esc(eq.id)}">
-            <span>Pilih Formulir ${esc(eq.instanceCode)} (${eq.forms.length})</span>
+            <span>Pilih Unit &amp; Buka Form (${eq.units.length} Unit)</span>
             <span class="cta-arrow">&rarr;</span>
           </button>
         `}
@@ -944,7 +898,11 @@ function renderEquipGrid() {
     const eq = EQUIPMENT_CATALOG.find((x) => x.id === eqId);
     if (!eq) return;
 
-    const openSingle = (code) => {
+    const openSingle = (code, unitCode) => {
+      const u = eq.units.find((x) => x.code === unitCode) || eq.units[0];
+      localStorage.setItem('cs_unit_code', u.code);
+      localStorage.setItem('cs_unit_building', u.building);
+      localStorage.setItem('cs_unit_location', u.location);
       showWorkstation(code).catch((er) => toast(er.message, 'err'));
     };
 
@@ -952,11 +910,11 @@ function renderEquipGrid() {
       openFormSelectorDialog(eq);
     };
 
-    const btnOpen = card.querySelector('.btn-open-form');
-    if (btnOpen) {
-      btnOpen.addEventListener('click', (e) => {
+    const btnSingle = card.querySelector('.btn-open-single');
+    if (btnSingle) {
+      btnSingle.addEventListener('click', (e) => {
         e.stopPropagation();
-        openSingle(btnOpen.dataset.code);
+        openSingle(btnSingle.dataset.code, btnSingle.dataset.unit);
       });
     }
 
@@ -969,8 +927,11 @@ function renderEquipGrid() {
     }
 
     card.addEventListener('click', () => {
-      if (eq.forms.length === 1) openSingle(eq.forms[0].code);
-      else pickForm();
+      if (eq.units.length === 1 && eq.forms.length === 1) {
+        openSingle(eq.forms[0].code, eq.units[0].code);
+      } else {
+        pickForm();
+      }
     });
   });
 }
@@ -1031,7 +992,7 @@ async function renderActionItems() {
           <div class="action-btn-group">
             ${isLeader ? `
               ${it.action_type === 'TODAY' ? `
-                <button type="button" class="btn-card-action btn-switch btn-make-backlog" data-id="${it.id}">
+                <button type="button" class="btn-card-action btn-switch btn-make-backlog" data-id="${it.id}" data-item="${esc(it.item_name)}" data-inst="${esc(it.instance_code)}">
                   📅 Ke Backlog
                 </button>
               ` : `
@@ -1053,15 +1014,8 @@ async function renderActionItems() {
 
     // Wire buttons
     container.querySelectorAll('.btn-make-backlog').forEach((btn) => {
-      btn.onclick = async () => {
-        const id = btn.dataset.id;
-        const targetDate = prompt('Masukkan tanggal target backlog (YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
-        if (targetDate) {
-          await api.actionDecision(id, { action_type: 'BACKLOG', scheduled_date: targetDate });
-          toast('Item dipindahkan ke Action Backlog 🟡', 'ok');
-          loadActionCounts();
-          renderActionItems();
-        }
+      btn.onclick = () => {
+        openBacklogScheduleModal(btn.dataset.id, btn.dataset.item, btn.dataset.inst);
       };
     });
 
@@ -1090,6 +1044,146 @@ async function renderActionItems() {
   }
 }
 
+// Custom Modal: Backlog Scheduling (Replaces native browser prompt)
+function openBacklogScheduleModal(itemId, itemName, instanceCode) {
+  const dlg = $('#dlg-backlog-schedule');
+  if (!dlg) return;
+  $('#backlog-action-id').value = itemId;
+  $('#backlog-item-preview').textContent = `[${instanceCode}] ${itemName}`;
+  const target = new Date();
+  target.setDate(target.getDate() + 3);
+  $('#backlog-target-date').value = target.toISOString().slice(0, 10);
+  $('#backlog-notes').value = '';
+  dlg.showModal();
+}
+
+// Custom Modal: Logout Confirmation (Replaces native browser confirm)
+function openLogoutModal() {
+  const dlg = $('#dlg-confirm-logout');
+  if (dlg) dlg.showModal();
+}
+
+// ------------------------------------------------------------------ USER NOTIFICATION & TASKS MODAL
+async function loadUserTasks(showNotificationToast = false) {
+  const u = getCurrentUser();
+  if (!u) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const assignments = await api.assignments(today, u.id);
+    const pendingTasks = (assignments || []).filter((a) => a.status === 'PENDING');
+    const badge = $('#tasks-badge-count');
+    if (badge) {
+      if (pendingTasks.length > 0) {
+        badge.textContent = pendingTasks.length;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    if (showNotificationToast && pendingTasks.length > 0) {
+      toast(`🔔 Anda memiliki ${pendingTasks.length} tugas inspeksi dari Leader hari ini.`, 'ok');
+    }
+  } catch {}
+}
+
+async function openUserTasksModal() {
+  const dlg = $('#dlg-user-tasks');
+  const body = $('#user-tasks-body');
+  if (!dlg || !body) return;
+
+  body.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">Memuat tugas inspeksi...</div>';
+  dlg.showModal();
+
+  try {
+    const u = getCurrentUser();
+    const today = new Date().toISOString().slice(0, 10);
+    const assignments = await api.assignments(today, u?.id);
+
+    if (!assignments || !assignments.length) {
+      body.innerHTML = `
+        <div style="text-align:center;padding:40px 16px;color:#64748b;">
+          <div style="font-size:32px;margin-bottom:10px;">📋</div>
+          <h4 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 6px;">Tidak Ada Penugasan Khusus Hari Ini</h4>
+          <p style="font-size:12px;color:#64748b;margin:0;">Leader belum menambahkan tugas khusus untuk Anda pada tanggal ${today}. Anda tetap dapat melakukan inspeksi rutin lewat katalog mesin.</p>
+        </div>
+      `;
+      return;
+    }
+
+    body.innerHTML = assignments.map((a) => {
+      const isDaily = a.inspection_type === 'DAILY';
+      let targetTpl = 'AD_D';
+      if (a.instance_code.startsWith('CH')) {
+        targetTpl = isDaily ? 'CHILLER_D' : 'CHILLER_M';
+      } else if (a.instance_code.startsWith('AD')) {
+        targetTpl = isDaily ? 'AD_D' : 'AD_M';
+      } else if (a.instance_code.startsWith('CT')) {
+        targetTpl = 'CT';
+      } else if (a.instance_code.startsWith('SCR')) {
+        targetTpl = 'SCR';
+      }
+
+      return `
+        <div class="task-item-card">
+          <div class="task-item-header">
+            <span class="task-badge-type ${isDaily ? '' : 'monthly'}">
+              ${isDaily ? '📅 Inspeksi Harian (Daily)' : '📅 Inspeksi Bulanan (Monthly)'}
+            </span>
+            <span style="font-size:11px;font-weight:700;color:${a.status === 'COMPLETED' ? '#15803d' : '#d97706'}">
+              ${a.status === 'COMPLETED' ? '✔ SELESAI' : '⏳ PENDING'}
+            </span>
+          </div>
+
+          <div class="task-item-inst">
+            ${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}
+          </div>
+          <div class="task-item-loc">
+            📍 ${esc(a.building || '-')} &bull; ${esc(a.room_location || '-')}
+          </div>
+
+          ${a.notes ? `
+            <div class="task-item-note">
+              <strong>Catatan Leader (${esc(a.assigned_by_name || 'Leader')}):</strong> "${esc(a.notes)}"
+            </div>
+          ` : ''}
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <div style="font-size:11px;color:#94a3b8;">
+              Jadwal: <strong>${esc(a.schedule_date)}</strong>
+            </div>
+            ${a.status !== 'COMPLETED' ? `
+              <button type="button" class="btn-submit-report btn-start-task" data-id="${a.id}" data-tpl="${targetTpl}" data-inst="${esc(a.instance_code)}" data-bld="${esc(a.building || '')}" data-loc="${esc(a.room_location || '')}" style="width:auto;padding:7px 16px;margin:0;font-size:12px;">
+                ▶ Mulai Inspeksi Sekarang
+              </button>
+            ` : `
+              <span style="color:#15803d;font-size:12px;font-weight:700;">✔ Selesai Diperiksa</span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    body.querySelectorAll('.btn-start-task').forEach((btn) => {
+      btn.onclick = async () => {
+        const tpl = btn.dataset.tpl;
+        const inst = btn.dataset.inst;
+        const bld = btn.dataset.bld;
+        const loc = btn.dataset.loc;
+        localStorage.setItem('cs_unit_code', inst);
+        localStorage.setItem('cs_unit_building', bld);
+        localStorage.setItem('cs_unit_location', loc);
+        dlg.close();
+        await showWorkstation(tpl);
+        toast(`Membuka checksheet untuk unit ${inst} 🚀`, 'ok');
+      };
+    });
+  } catch (err) {
+    body.innerHTML = `<div style="color:#ef4444;padding:20px;text-align:center;">Gagal memuat: ${esc(err.message)}</div>`;
+  }
+}
+
 function openActionSidebar() {
   $('#sidebar-action-backdrop')?.classList.add('active');
   $('#sidebar-action')?.classList.add('active');
@@ -1105,8 +1199,8 @@ function closeActionSidebar() {
 function populateInstanceSelect(selectId) {
   const sel = $(selectId);
   if (!sel) return;
-  sel.innerHTML = EQUIPMENT_CATALOG.map((eq) => `
-    <option value="${esc(eq.instanceCode)}">${esc(eq.instanceCode)} - ${esc(eq.title)} (${esc(eq.building)})</option>
+  sel.innerHTML = getAllInstances().map((i) => `
+    <option value="${esc(i.code)}">${esc(i.code)} &bull; ${esc(i.machineType)} (${esc(i.building)})</option>
   `).join('');
 }
 
@@ -1240,6 +1334,7 @@ function setupEventListeners() {
       updateActorUI(res.user.full_name);
       toast(`Selamat datang, ${res.user.full_name}! 👋`, 'ok');
       showPortal();
+      loadUserTasks(true);
     } catch (e) {
       if (errBox) {
         errBox.textContent = e.message || 'Login gagal.';
@@ -1257,13 +1352,43 @@ function setupEventListeners() {
     });
   });
 
-  $('#btn-logout')?.addEventListener('click', async () => {
-    if (confirm('Apakah Anda yakin ingin keluar dari sistem checksheet?')) {
-      try { await api.logout(); } catch {}
-      setCurrentUser(null);
-      toast('Anda telah keluar.');
-      showLogin();
+  // Logout wiring via custom modal
+  $('#btn-logout')?.addEventListener('click', openLogoutModal);
+  $('#btn-confirm-logout-yes')?.addEventListener('click', async () => {
+    $('#dlg-confirm-logout')?.close();
+    try { await api.logout(); } catch {}
+    setCurrentUser(null);
+    toast('Anda telah keluar dari sistem.');
+    showLogin();
+  });
+  $('#btn-cancel-logout')?.addEventListener('click', () => $('#dlg-confirm-logout')?.close());
+  $('#dlg-logout-close')?.addEventListener('click', () => $('#dlg-confirm-logout')?.close());
+
+  // Backlog schedule modal wiring
+  $('#btn-cancel-backlog')?.addEventListener('click', () => $('#dlg-backlog-schedule')?.close());
+  $('#dlg-backlog-close')?.addEventListener('click', () => $('#dlg-backlog-schedule')?.close());
+  $('#form-backlog-schedule')?.addEventListener('submit', async () => {
+    const id = $('#backlog-action-id').value;
+    const targetDate = $('#backlog-target-date').value;
+    const notes = $('#backlog-notes').value.trim();
+    if (!id || !targetDate) return;
+
+    try {
+      await api.actionDecision(id, { action_type: 'BACKLOG', scheduled_date: targetDate, notes });
+      toast('Item dipindahkan ke Action Backlog 🟡', 'ok');
+      $('#dlg-backlog-schedule')?.close();
+      loadActionCounts();
+      renderActionItems();
+    } catch (err) {
+      toast('Gagal menjadwalkan backlog: ' + err.message, 'err');
     }
+  });
+
+  // User tasks modal wiring
+  $('#btn-user-tasks')?.addEventListener('click', openUserTasksModal);
+  $('#dlg-user-tasks-close')?.addEventListener('click', () => $('#dlg-user-tasks')?.close());
+  $('#dlg-user-tasks')?.addEventListener('click', (e) => {
+    if (e.target === $('#dlg-user-tasks')) $('#dlg-user-tasks').close();
   });
 
   // 2. Action Sidebar Triggers
@@ -1586,6 +1711,7 @@ function dismissSplash() {
       updateActorUI(user.full_name);
       showPortal();
       loadActionCounts();
+      loadUserTasks(true);
     } else {
       showLogin();
     }

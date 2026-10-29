@@ -124,15 +124,7 @@ setTimeout(function() {
                 </div>
             </div>
 
-            <!-- Center: Live Time-Boxing Shift Indicator -->
-            <div class="portal-nav-center" style="display:flex;align-items:center;gap:10px;">
-                <div id="timebox-pill" class="timebox-badge timebox-check" title="Siklus Shift Kerja: Check (07:30-10:00), Action (10:00-14:00), Report (14:00-16:00)">
-                    <span class="timebox-dot"></span>
-                    <span id="timebox-label">07:30 - 10:00: CHECK TIME</span>
-                </div>
-            </div>
-
-            <!-- Right: Action Sidebars Triggers & User Profile -->
+            <!-- Right: Action Sidebars Triggers, User Tasks & User Profile -->
             <div class="portal-nav-right" style="display:flex;align-items:center;gap:10px;">
                 <!-- Button Trigger: Action Sidebar (NG Items) -->
                 <button id="btn-open-actions" class="nav-action-btn btn-nav-action" type="button" title="Buka Daftar Temuan NG & Tindakan">
@@ -145,6 +137,13 @@ setTimeout(function() {
                 <button id="btn-open-reporting" class="nav-action-btn btn-nav-report" type="button" title="Buka Formulir Laporan Pemeliharaan">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     <span>Reporting</span>
+                </button>
+
+                <!-- Button Trigger: User Inspection Tasks (Notification for Technician) -->
+                <button id="btn-user-tasks" class="nav-action-btn btn-nav-tasks" type="button" title="Lihat Penugasan Inspeksi Hari Ini">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span>Tugas Saya</span>
+                    <span id="tasks-badge-count" class="nav-badge-count task-badge" style="display:none;">0</span>
                 </button>
 
                 <!-- Button Trigger: Assign Jobs (Leader Only) -->
@@ -182,12 +181,12 @@ setTimeout(function() {
     <section class="portal-kpi-bar">
         <div class="kpi-grid">
             <div class="kpi-card">
-                <span class="kpi-label">Total Unit Mesin:</span>
-                <span id="kpi-total-machines" class="kpi-val">8</span>
+                <span class="kpi-label">Katalog Mesin:</span>
+                <span id="kpi-total-machines" class="kpi-val">4 Tipe (8 Unit)</span>
             </div>
             <div class="kpi-card">
                 <span class="kpi-label">Form Standar (STD):</span>
-                <span id="kpi-active-forms" class="kpi-val">2 Mesin</span>
+                <span id="kpi-active-forms" class="kpi-val">Chiller &amp; Air Dryer</span>
             </div>
             <div class="kpi-card">
                 <span class="kpi-label">Action Today (NG):</span>
@@ -213,7 +212,7 @@ setTimeout(function() {
                     <input 
                         id="portal-search"
                         type="text" 
-                        placeholder="Cari ID alat (AD-001, CH-001) atau gedung..." 
+                        placeholder="Cari jenis mesin, ID unit (AD-001, CH-001), atau gedung..." 
                         autocomplete="off"
                     >
                 </div>
@@ -490,11 +489,11 @@ setTimeout(function() {
 <dialog id="dlg-assignment" class="modal-dlg">
     <div class="modal-card">
         <div class="modal-header">
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span>📅</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <h3>Tugaskan Jadwal Inspeksi (Job Assignment)</h3>
             </div>
-            <button id="dlg-assignment-close" type="button" style="border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:16px;">✕</button>
+            <button id="dlg-assignment-close" type="button" style="border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
         </div>
         <div class="modal-body">
             <form id="form-assignment" onsubmit="return false;">
@@ -503,7 +502,7 @@ setTimeout(function() {
                     <select id="assign-instance" required></select>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="modal-grid-2">
                     <div class="report-form-group">
                         <label for="assign-date">Tanggal Jadwal:</label>
                         <input type="date" id="assign-date" required>
@@ -524,7 +523,7 @@ setTimeout(function() {
 
                 <div class="report-form-group">
                     <label for="assign-notes">Catatan Tambahan untuk Teknisi:</label>
-                    <input type="text" id="assign-notes" placeholder="Misal: Periksa getaran fan lebih teliti">
+                    <input type="text" id="assign-notes" placeholder="Misal: Periksa getaran fan &amp; suhu lebih teliti">
                 </div>
 
                 <button type="submit" id="btn-save-assignment" class="btn-submit-report" style="margin-top:10px;">
@@ -536,7 +535,93 @@ setTimeout(function() {
 </dialog>
 
 <!-- ========================================================================= -->
-<!-- 6. FORM SELECTOR DIALOG (for equipment with multiple forms like Chiller)  -->
+<!-- 5B. MODAL DIALOG: TUGAS INSPEKSI SAYA (TECHNICIAN NOTIFICATION)            -->
+<!-- ========================================================================= -->
+<dialog id="dlg-user-tasks" class="modal-dlg">
+    <div class="modal-card modal-card-lg">
+        <div class="modal-header" style="background:#1e3a8a;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <h3>Jadwal Tugas Inspeksi Saya (Hari Ini)</h3>
+            </div>
+            <button id="dlg-user-tasks-close" type="button" style="border:none;background:transparent;color:#93c5fd;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
+        </div>
+        <div class="modal-body" id="user-tasks-body">
+            <!-- Populated dynamically via JS -->
+        </div>
+    </div>
+</dialog>
+
+<!-- ========================================================================= -->
+<!-- 5C. MODAL DIALOG: JADWALKAN ACTION BACKLOG (REPLACES NATIVE PROMPT)        -->
+<!-- ========================================================================= -->
+<dialog id="dlg-backlog-schedule" class="modal-dlg">
+    <div class="modal-card">
+        <div class="modal-header" style="background:#b45309;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <h3>Jadwalkan ke Action Backlog</h3>
+            </div>
+            <button id="dlg-backlog-close" type="button" style="border:none;background:transparent;color:#fde68a;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-backlog-schedule" onsubmit="return false;">
+                <input type="hidden" id="backlog-action-id" value="">
+                
+                <div class="report-form-group">
+                    <label>Item Temuan NG:</label>
+                    <div id="backlog-item-preview" style="padding:10px 14px;background:#f8fafc;border-radius:8px;font-size:12.5px;font-weight:600;color:#1e293b;border:1px solid #e2e8f0;">-</div>
+                </div>
+
+                <div class="report-form-group">
+                    <label for="backlog-target-date">Tanggal Target Pengerjaan (Backlog):</label>
+                    <input type="date" id="backlog-target-date" required>
+                </div>
+
+                <div class="report-form-group">
+                    <label for="backlog-notes">Catatan Tambahan / Alasan Penundaan:</label>
+                    <input type="text" id="backlog-notes" placeholder="Misal: Menunggu sparepart pengganti datang...">
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                    <button type="button" id="btn-cancel-backlog" class="filter-pill" style="padding:8px 16px;cursor:pointer;">Batal</button>
+                    <button type="submit" id="btn-submit-backlog" class="btn-submit-report" style="width:auto;padding:8px 20px;margin:0;background:#d97706;">
+                        ✅ Simpan Jadwal Backlog
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<!-- ========================================================================= -->
+<!-- 5D. MODAL DIALOG: KONFIRMASI LOGOUT (REPLACES NATIVE CONFIRM)              -->
+<!-- ========================================================================= -->
+<dialog id="dlg-confirm-logout" class="modal-dlg">
+    <div class="modal-card" style="width:430px;">
+        <div class="modal-header" style="background:#b91c1c;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <h3>Konfirmasi Keluar (Logout)</h3>
+            </div>
+            <button id="dlg-logout-close" type="button" style="border:none;background:transparent;color:#fecaca;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
+        </div>
+        <div class="modal-body" style="padding:26px 22px;text-align:center;">
+            <p style="font-size:13.5px;color:#334155;margin:0 0 22px;line-height:1.5;">
+                Apakah Anda yakin ingin keluar dari Central Maintenance Platform PT. CBI?
+            </p>
+            <div style="display:flex;justify-content:center;gap:12px;">
+                <button type="button" id="btn-cancel-logout" class="filter-pill" style="padding:8px 22px;font-size:13px;cursor:pointer;">Batal</button>
+                <button type="button" id="btn-confirm-logout-yes" class="btn-submit-report" style="width:auto;padding:8px 24px;margin:0;background:#b91c1c;box-shadow:none;">
+                    Ya, Keluar
+                </button>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<!-- ========================================================================= -->
+<!-- 6. FORM SELECTOR DIALOG (Consolidated Multi-Unit & Multi-Form)           -->
 <!-- ========================================================================= -->
 <dialog id="dlg-form-select" class="form-select-dlg">
     <div class="fsd-card">
@@ -545,12 +630,19 @@ setTimeout(function() {
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
             </div>
             <div>
-                <h3 id="fsd-title">Pilih Formulir Pemeriksaan</h3>
-                <p class="fsd-sub" id="fsd-sub">Pilih jenis lembar kerja yang ingin dibuka</p>
+                <h3 id="fsd-title">Pilih Unit &amp; Formulir Pemeriksaan</h3>
+                <p class="fsd-sub" id="fsd-sub">Pilih ID unit terpasang dan jenis lembar kerja</p>
             </div>
             <button id="fsd-close" class="fsd-close-btn" type="button" title="Tutup">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
+        </div>
+        <div style="padding: 16px 20px 0;">
+            <div id="fsd-unit-selector-wrap" style="margin-bottom:12px;">
+                <label style="font-size:11.5px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">1. Pilih Unit Mesin &amp; Lokasi Gedung:</label>
+                <div class="fsd-units-grid" id="fsd-units-grid"></div>
+            </div>
+            <label style="font-size:11.5px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">2. Pilih Formulir Pemeriksaan:</label>
         </div>
         <div class="fsd-options" id="fsd-options">
             <!-- Options are rendered dynamically -->
