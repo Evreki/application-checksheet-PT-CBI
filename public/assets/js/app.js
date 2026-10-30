@@ -41,10 +41,17 @@ function updateActorUI(name) {
     $('#active-user-role').textContent = role === 'leader' ? 'Leader' : 'Teknisi';
     $('#active-user-role').className = `user-role-badge ${role === 'leader' ? 'role-leader' : 'role-user'}`;
   }
-  // Tombol penugasan hanya aktif untuk Leader
+  // Role-based Navbar Buttons:
+  // Leader: Menampilkan tombol Penugasan, menyembunyikan Tugas Saya
+  // Teknisi: Menampilkan tombol Tugas Saya, menyembunyikan Penugasan
+  const isLeader = (u?.role || 'user').toLowerCase() === 'leader';
   const assignBtn = $('#btn-open-assignment');
+  const tasksBtn = $('#btn-user-tasks');
   if (assignBtn) {
-    assignBtn.style.display = (u?.role === 'leader') ? 'inline-flex' : 'none';
+    assignBtn.style.display = isLeader ? 'inline-flex' : 'none';
+  }
+  if (tasksBtn) {
+    tasksBtn.style.display = !isLeader ? 'inline-flex' : 'none';
   }
 }
 
