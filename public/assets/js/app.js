@@ -426,6 +426,7 @@ function showPortal() {
     pt.scrollTop = 0;
   }
   ui.view = 'portal';
+  hideActiveTaskBanner();
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   updatePortalKPIs();
   loadActionCounts();
@@ -438,6 +439,27 @@ function updatePortalKPIs() {
   const allUnits = getAllInstances();
   if (kpiTot) kpiTot.textContent = `${EQUIPMENT_CATALOG.length} Tipe (${allUnits.length} Unit)`;
   if (kpiAct) kpiAct.textContent = 'Chiller & Air Dryer (STD)';
+}
+
+
+// ------------------------------------------------------------------ ACTIVE TASK BANNER HELPERS
+function showActiveTaskBanner(task) {
+  const banner = $('#assignment-task-banner');
+  if (!banner || !task) return;
+  const infoEl = $('#atb-info-text');
+  const notesEl = $('#atb-notes-text');
+  if (infoEl) {
+    infoEl.textContent = `Tugas Aktif: Inspeksi ${task.type || 'Harian'} - ${task.inst} ${task.name ? '(' + task.name + ')' : ''} [${task.bld || '-'}]`;
+  }
+  if (notesEl) {
+    notesEl.textContent = task.notes ? `Catatan Leader: "${task.notes}"` : '';
+  }
+  banner.style.display = 'flex';
+}
+
+function hideActiveTaskBanner() {
+  const banner = $('#assignment-task-banner');
+  if (banner) banner.style.display = 'none';
 }
 
 async function showWorkstation(tplCode) {
@@ -466,6 +488,12 @@ async function showWorkstation(tplCode) {
   if ($('#period-next')) $('#period-next').title = isAnnualOrStd ? 'Tahun berikutnya' : 'Bulan berikutnya';
 
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  const savedActiveTask = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+  if (savedActiveTask) {
+    showActiveTaskBanner(savedActiveTask);
+  } else {
+    hideActiveTaskBanner();
+  }
   await openSheet();
 }
 
@@ -545,7 +573,7 @@ const EQUIPMENT_CATALOG = [
     img: `${getAssetBase()}/assets/img/machines/air_dryer.png`,
     deptBadges: [
       { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' },
+      { text: 'STD PREVENTIVE', bg: '#15803d' },
       { text: '3 Gedung (A, B, C)', bg: '#0369a1' }
     ],
     sections: ['Utility', 'Maintenance', 'PLANT SERVICE'],
@@ -576,7 +604,7 @@ const EQUIPMENT_CATALOG = [
     img: `${getAssetBase()}/assets/img/machines/chiller.jpg`,
     deptBadges: [
       { text: 'Seksi Utility', bg: '#2b6cb0' },
-      { text: '⭐ STD PREVENTIVE', bg: '#15803d' },
+      { text: 'STD PREVENTIVE', bg: '#15803d' },
       { text: '3 Gedung (A, B, C)', bg: '#0369a1' }
     ],
     sections: ['Utility', 'Maintenance', 'WET CHARGING', 'PLANT SERVICE'],
@@ -1063,15 +1091,18 @@ function openLogoutModal() {
   if (dlg) dlg.showModal();
 }
 
-// ------------------------------------------------------------------ USER NOTIFICATION & TASKS MODAL
+
+// ------------------------------------------------------------------ LEADER MONITORING & USER TASKS MODAL
+let cachedUserAssignments = [];
+let activeUserTasksTab = 'pending';
+
 async function loadUserTasks(showNotificationToast = false) {
   const u = getCurrentUser();
   if (!u) return;
 
-  const today = new Date().toISOString().slice(0, 10);
   try {
-    const assignments = await api.assignments(today, u.id);
-    const pendingTasks = (assignments || []).filter((a) => a.status === 'PENDING');
+    const assignments = await api.assignments('all', u.id);
+    const pendingTasks = (assignments || []).filter((a) => a.status !== 'COMPLETED');
     const badge = $('#tasks-badge-count');
     if (badge) {
       if (pendingTasks.length > 0) {
@@ -1083,9 +1114,191 @@ async function loadUserTasks(showNotificationToast = false) {
     }
 
     if (showNotificationToast && pendingTasks.length > 0) {
-      toast(`🔔 Anda memiliki ${pendingTasks.length} tugas inspeksi dari Leader hari ini.`, 'ok');
+      toast(`🔔 Anda memiliki ${pendingTasks.length} tugas inspeksi dari Leader.`, 'ok');
     }
   } catch {}
+}
+
+async function renderLeaderMonitoring() {
+  const container = $('#assignment-monitoring-list');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;">Memuat data status penugasan...</div>';
+
+  try {
+    const list = await api.assignments('all');
+    if (!list || !list.length) {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;">Belum ada penugasan yang tercatat.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map((a) => {
+      const isDone = a.status === 'COMPLETED';
+      const isDaily = a.inspection_type === 'DAILY';
+      return `
+        <div class="assign-monitoring-card">
+          <div class="assign-card-hdr">
+            <span class="assign-card-title">${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}</span>
+            <span class="assign-status-badge ${isDone ? 'completed' : 'pending'}">
+              ${isDone ? '✔ Selesai' : '⏳ Belum Dikerjakan'}
+            </span>
+          </div>
+          <div class="assign-card-meta">
+            <span>📍 ${esc(a.building || '-')} (${esc(a.room_location || '-')})</span>
+            <span>📅 Target: <b>${esc(a.schedule_date)}</b></span>
+            <span>⏱ Jenis: <b>${isDaily ? 'Harian (Daily)' : 'Bulanan (Monthly)'}</b></span>
+            <span>👤 Teknisi: <b>${esc(a.assigned_to_name || 'Teknisi')}</b></span>
+          </div>
+          ${a.notes ? `<div class="assign-card-notes"><strong>Instruksi Leader:</strong> "${esc(a.notes)}"</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<div style="color:#ef4444;padding:20px;text-align:center;">Gagal memuat status: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderUserTasksList(tab = 'pending') {
+  activeUserTasksTab = tab;
+  const body = $('#user-tasks-body');
+  if (!body) return;
+
+  const pendingTasks = cachedUserAssignments.filter((a) => a.status !== 'COMPLETED');
+  const doneTasks = cachedUserAssignments.filter((a) => a.status === 'COMPLETED');
+
+  const countBadge = $('#count-pending-tasks');
+  if (countBadge) countBadge.textContent = pendingTasks.length;
+
+  const currentList = tab === 'pending' ? pendingTasks : doneTasks;
+
+  // Update tabs UI
+  $('#tab-tasks-pending')?.classList.toggle('active', tab === 'pending');
+  $('#tab-tasks-done')?.classList.toggle('active', tab === 'done');
+
+  if (!currentList.length) {
+    body.innerHTML = `
+      <div style="text-align:center;padding:40px 16px;color:#64748b;">
+        <div style="font-size:32px;margin-bottom:10px;">${tab === 'pending' ? '🎉' : '📂'}</div>
+        <h4 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 6px;">
+          ${tab === 'pending' ? 'Semua Penugasan Selesai!' : 'Belum Ada Riwayat Tugas Selesai'}
+        </h4>
+        <p style="font-size:12px;color:#64748b;margin:0;">
+          ${tab === 'pending' ? 'Tidak ada tugas yang tertunda. Anda dapat melakukan inspeksi rutin mandiri lewat katalog mesin.' : 'Tugas yang telah Anda selesaikan akan tersimpan rapi di sini.'}
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  body.innerHTML = currentList.map((a) => {
+    const isDaily = a.inspection_type === 'DAILY';
+    let targetTpl = 'AD_D';
+    if (a.instance_code.startsWith('CH')) {
+      targetTpl = isDaily ? 'CHILLER_D' : 'CHILLER_M';
+    } else if (a.instance_code.startsWith('AD')) {
+      targetTpl = isDaily ? 'AD_D' : 'AD_M';
+    } else if (a.instance_code.startsWith('CT')) {
+      targetTpl = 'CT';
+    } else if (a.instance_code.startsWith('SCR')) {
+      targetTpl = 'SCR';
+    }
+
+    const isDone = a.status === 'COMPLETED';
+
+    return `
+      <div class="task-item-card">
+        <div class="task-item-header">
+          <span class="task-badge-type ${isDaily ? '' : 'monthly'}">
+            ${isDaily ? '📅 Inspeksi Harian (Daily)' : '📅 Inspeksi Bulanan (Monthly)'}
+          </span>
+          <span style="font-size:11px;font-weight:700;color:${isDone ? '#15803d' : '#d97706'}">
+            ${isDone ? '✔ SELESAI' : '⏳ PENDING'}
+          </span>
+        </div>
+
+        <div class="task-item-inst">
+          ${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}
+        </div>
+        <div class="task-item-loc">
+          📍 ${esc(a.building || '-')} &bull; ${esc(a.room_location || '-')}
+        </div>
+
+        ${a.notes ? `
+          <div class="task-item-note">
+            <strong>Catatan Leader (${esc(a.assigned_by_name || 'Leader')}):</strong> "${esc(a.notes)}"
+          </div>
+        ` : ''}
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;flex-wrap:wrap;">
+          <div style="font-size:11px;color:#94a3b8;">
+            Target: <strong>${esc(a.schedule_date)}</strong>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${!isDone ? `
+              <button type="button" class="btn-submit-report btn-start-task" data-id="${a.id}" data-tpl="${targetTpl}" data-inst="${esc(a.instance_code)}" data-name="${esc(a.instance_name || '')}" data-bld="${esc(a.building || '')}" data-loc="${esc(a.room_location || '')}" data-notes="${esc(a.notes || '')}" data-type="${isDaily ? 'Harian (Daily)' : 'Bulanan (Monthly)'}" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:#2563eb;">
+                ▶ Mulai Inspeksi
+              </button>
+              <button type="button" class="btn-submit-report btn-mark-complete-task" data-id="${a.id}" data-inst="${esc(a.instance_code)}" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:#16a34a;">
+                ✔ Tandai Selesai
+              </button>
+            ` : `
+              <span style="color:#15803d;font-size:12px;font-weight:700;">✔ Selesai Diperiksa</span>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire buttons inside user tasks modal
+  body.querySelectorAll('.btn-start-task').forEach((btn) => {
+    btn.onclick = async () => {
+      const taskId = btn.dataset.id;
+      const tpl = btn.dataset.tpl;
+      const inst = btn.dataset.inst;
+      const name = btn.dataset.name;
+      const bld = btn.dataset.bld;
+      const loc = btn.dataset.loc;
+      const notes = btn.dataset.notes;
+      const type = btn.dataset.type;
+
+      // Save active task in state and localStorage
+      const activeTask = { id: taskId, tpl, inst, name, bld, loc, notes, type };
+      localStorage.setItem('cs_active_task', JSON.stringify(activeTask));
+      localStorage.setItem('cs_unit_code', inst);
+      localStorage.setItem('cs_unit_building', bld);
+      localStorage.setItem('cs_unit_location', loc);
+
+      $('#dlg-user-tasks')?.close();
+      await showWorkstation(tpl);
+      showActiveTaskBanner(activeTask);
+      toast(`Membuka checksheet untuk unit ${inst} 🚀`, 'ok');
+    };
+  });
+
+  body.querySelectorAll('.btn-mark-complete-task').forEach((btn) => {
+    btn.onclick = async () => {
+      const taskId = btn.dataset.id;
+      const inst = btn.dataset.inst;
+      try {
+        await api.updateAssignmentStatus(taskId, 'COMPLETED');
+        toast(`✔ Tugas inspeksi ${inst} berhasil diselesaikan!`, 'ok');
+        // Update local state
+        const item = cachedUserAssignments.find((x) => String(x.id) === String(taskId));
+        if (item) item.status = 'COMPLETED';
+
+        const saved = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+        if (saved && String(saved.id) === String(taskId)) {
+          localStorage.removeItem('cs_active_task');
+          hideActiveTaskBanner();
+        }
+
+        await loadUserTasks(false);
+        renderUserTasksList(activeUserTasksTab);
+      } catch (err) {
+        toast('Gagal menyelesaikan tugas: ' + err.message, 'err');
+      }
+    };
+  });
 }
 
 async function openUserTasksModal() {
@@ -1098,91 +1311,13 @@ async function openUserTasksModal() {
 
   try {
     const u = getCurrentUser();
-    const today = new Date().toISOString().slice(0, 10);
-    const assignments = await api.assignments(today, u?.id);
-
-    if (!assignments || !assignments.length) {
-      body.innerHTML = `
-        <div style="text-align:center;padding:40px 16px;color:#64748b;">
-          <div style="font-size:32px;margin-bottom:10px;">📋</div>
-          <h4 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 6px;">Tidak Ada Penugasan Khusus Hari Ini</h4>
-          <p style="font-size:12px;color:#64748b;margin:0;">Leader belum menambahkan tugas khusus untuk Anda pada tanggal ${today}. Anda tetap dapat melakukan inspeksi rutin lewat katalog mesin.</p>
-        </div>
-      `;
-      return;
-    }
-
-    body.innerHTML = assignments.map((a) => {
-      const isDaily = a.inspection_type === 'DAILY';
-      let targetTpl = 'AD_D';
-      if (a.instance_code.startsWith('CH')) {
-        targetTpl = isDaily ? 'CHILLER_D' : 'CHILLER_M';
-      } else if (a.instance_code.startsWith('AD')) {
-        targetTpl = isDaily ? 'AD_D' : 'AD_M';
-      } else if (a.instance_code.startsWith('CT')) {
-        targetTpl = 'CT';
-      } else if (a.instance_code.startsWith('SCR')) {
-        targetTpl = 'SCR';
-      }
-
-      return `
-        <div class="task-item-card">
-          <div class="task-item-header">
-            <span class="task-badge-type ${isDaily ? '' : 'monthly'}">
-              ${isDaily ? '📅 Inspeksi Harian (Daily)' : '📅 Inspeksi Bulanan (Monthly)'}
-            </span>
-            <span style="font-size:11px;font-weight:700;color:${a.status === 'COMPLETED' ? '#15803d' : '#d97706'}">
-              ${a.status === 'COMPLETED' ? '✔ SELESAI' : '⏳ PENDING'}
-            </span>
-          </div>
-
-          <div class="task-item-inst">
-            ${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}
-          </div>
-          <div class="task-item-loc">
-            📍 ${esc(a.building || '-')} &bull; ${esc(a.room_location || '-')}
-          </div>
-
-          ${a.notes ? `
-            <div class="task-item-note">
-              <strong>Catatan Leader (${esc(a.assigned_by_name || 'Leader')}):</strong> "${esc(a.notes)}"
-            </div>
-          ` : ''}
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-            <div style="font-size:11px;color:#94a3b8;">
-              Jadwal: <strong>${esc(a.schedule_date)}</strong>
-            </div>
-            ${a.status !== 'COMPLETED' ? `
-              <button type="button" class="btn-submit-report btn-start-task" data-id="${a.id}" data-tpl="${targetTpl}" data-inst="${esc(a.instance_code)}" data-bld="${esc(a.building || '')}" data-loc="${esc(a.room_location || '')}" style="width:auto;padding:7px 16px;margin:0;font-size:12px;">
-                ▶ Mulai Inspeksi Sekarang
-              </button>
-            ` : `
-              <span style="color:#15803d;font-size:12px;font-weight:700;">✔ Selesai Diperiksa</span>
-            `}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    body.querySelectorAll('.btn-start-task').forEach((btn) => {
-      btn.onclick = async () => {
-        const tpl = btn.dataset.tpl;
-        const inst = btn.dataset.inst;
-        const bld = btn.dataset.bld;
-        const loc = btn.dataset.loc;
-        localStorage.setItem('cs_unit_code', inst);
-        localStorage.setItem('cs_unit_building', bld);
-        localStorage.setItem('cs_unit_location', loc);
-        dlg.close();
-        await showWorkstation(tpl);
-        toast(`Membuka checksheet untuk unit ${inst} 🚀`, 'ok');
-      };
-    });
+    cachedUserAssignments = (await api.assignments('all', u?.id)) || [];
+    renderUserTasksList('pending');
   } catch (err) {
-    body.innerHTML = `<div style="color:#ef4444;padding:20px;text-align:center;">Gagal memuat: ${esc(err.message)}</div>`;
+    body.innerHTML = `<div style="color:#ef4444;padding:20px;text-align:center;">Gagal memuat tugas: ${esc(err.message)}</div>`;
   }
 }
+
 
 function openActionSidebar() {
   $('#sidebar-action-backdrop')?.classList.add('active');
@@ -1303,6 +1438,11 @@ async function openAssignmentModal() {
   const dlg = $('#dlg-assignment');
   if (!dlg) return;
   populateInstanceSelect('#assign-instance');
+  // Reset tabs to form
+  $('#tab-assign-form')?.classList.add('active');
+  $('#tab-assign-history')?.classList.remove('active');
+  if ($('#panel-assign-form')) $('#panel-assign-form').style.display = 'block';
+  if ($('#panel-assign-history')) $('#panel-assign-history').style.display = 'none';
   if ($('#assign-date')) $('#assign-date').value = new Date().toISOString().slice(0, 10);
   
   // Populate users
@@ -1490,6 +1630,44 @@ function setupEventListeners() {
 
   // 4. Assignment Triggers (Leader)
   $('#btn-open-assignment')?.addEventListener('click', openAssignmentModal);
+  // Leader Assignment Modal Tabs
+  $('#tab-assign-form')?.addEventListener('click', () => {
+    $('#tab-assign-form')?.classList.add('active');
+    $('#tab-assign-history')?.classList.remove('active');
+    if ($('#panel-assign-form')) $('#panel-assign-form').style.display = 'block';
+    if ($('#panel-assign-history')) $('#panel-assign-history').style.display = 'none';
+  });
+
+  $('#tab-assign-history')?.addEventListener('click', () => {
+    $('#tab-assign-history')?.classList.add('active');
+    $('#tab-assign-form')?.classList.remove('active');
+    if ($('#panel-assign-form')) $('#panel-assign-form').style.display = 'none';
+    if ($('#panel-assign-history')) $('#panel-assign-history').style.display = 'block';
+    renderLeaderMonitoring();
+  });
+
+  // Technician Tasks Modal Tabs
+  $('#tab-tasks-pending')?.addEventListener('click', () => renderUserTasksList('pending'));
+  $('#tab-tasks-done')?.addEventListener('click', () => renderUserTasksList('done'));
+
+  // Workstation Active Task Complete Button
+  $('#btn-complete-active-task')?.addEventListener('click', async () => {
+    const saved = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+    if (!saved || !saved.id) {
+      hideActiveTaskBanner();
+      return;
+    }
+    try {
+      await api.updateAssignmentStatus(saved.id, 'COMPLETED');
+      localStorage.removeItem('cs_active_task');
+      hideActiveTaskBanner();
+      toast(`✔ Tugas penugasan inspeksi ${saved.inst} berhasil diselesaikan!`, 'ok');
+      await loadUserTasks(false);
+    } catch (err) {
+      toast('Gagal menyelesaikan tugas: ' + err.message, 'err');
+    }
+  });
+
   $('#dlg-assignment-close')?.addEventListener('click', () => $('#dlg-assignment')?.close());
 
   $('#form-assignment')?.addEventListener('submit', async () => {

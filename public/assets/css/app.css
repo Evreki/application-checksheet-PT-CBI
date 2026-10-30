@@ -689,7 +689,35 @@ dialog::backdrop{background:#0b1a2e88;backdrop-filter:blur(2px)}
   border-color: #6b7280;
   box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.15);
 }
+
+.building-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.building-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .building-filters {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .building-filters::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .filter-pill {
+  white-space: nowrap;
   padding: 8px 16px;
   border-radius: 9999px;
   font-size: 12px;
@@ -2191,4 +2219,248 @@ dialog.modal-dlg::backdrop {
   0% { transform: scale(1); }
   50% { transform: scale(1.12); }
   100% { transform: scale(1); }
+}
+
+/* ========================================================================= */
+/* ACTIVE ASSIGNMENT BANNER & LEADER MONITORING STYLES                       */
+/* ========================================================================= */
+.assignment-task-banner {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  padding: 10px 20px !important;
+  border-bottom: 2px solid #2563eb !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important;
+  z-index: 30 !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.atb-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.atb-badge {
+  background: #f59e0b !important;
+  color: #78350f !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+#atb-info-text {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.atb-notes {
+  font-size: 12px !important;
+  color: #bfdbfe !important;
+  font-style: italic !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+}
+
+.atb-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.btn-complete-task {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  padding: 7px 15px !important;
+  border-radius: 6px !important;
+  border: 1px solid #15803d !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35) !important;
+}
+
+.btn-complete-task:hover {
+  background: #15803d !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Leader Monitoring Tab Cards */
+.assign-monitoring-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.assign-card-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.assign-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.assign-card-meta {
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assign-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.assign-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.assign-status-badge.completed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.assign-card-notes {
+  font-size: 12px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* ========================================================================= */
+/* RESPONSIVE & MOBILE POLISH                                                */
+/* ========================================================================= */
+@media (max-width: 860px) {
+  .portal-nav-inner {
+    height: auto !important;
+    min-height: 58px !important;
+    padding: 8px 16px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .portal-brand-left {
+    gap: 8px !important;
+  }
+  .portal-brand-company {
+    font-size: 11px !important;
+  }
+  .portal-brand-platform {
+    font-size: 12px !important;
+  }
+  .portal-nav-right {
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .kpi-card {
+    padding: 10px 12px !important;
+  }
+  .kpi-label {
+    font-size: 11.5px !important;
+  }
+  .kpi-val {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .portal-brand-company {
+    display: none !important;
+  }
+  .portal-brand-platform {
+    max-width: 150px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+  }
+  .portal-nav-bar {
+    padding: 0 !important;
+  }
+  .portal-nav-inner {
+    padding: 6px 12px !important;
+  }
+  .portal-user-wrap .portal-user-name,
+  .portal-user-wrap .portal-user-badge {
+    display: none !important;
+  }
+  .portal-user-btn {
+    padding-left: 6px !important;
+    border-left: none !important;
+  }
+  .portal-kpi-bar {
+    width: calc(100% - 24px) !important;
+    margin-top: -24px !important;
+  }
+  .kpi-card {
+    flex-direction: column !important;
+    padding: 8px 10px !important;
+    gap: 2px !important;
+  }
+  .portal-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .portal-filter-left {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+  .portal-search-box {
+    width: 100% !important;
+  }
+  .modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .modal-body {
+    padding: 16px 18px !important;
+  }
+  dialog.modal-dlg {
+    overflow: hidden !important;
+    max-width: 98vw !important;
+  }
+  .modal-card {
+    width: 94vw !important;
+    max-width: 94vw !important;
+  }
 }

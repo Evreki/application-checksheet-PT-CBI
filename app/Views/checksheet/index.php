@@ -125,44 +125,44 @@ setTimeout(function() {
             </div>
 
             <!-- Right: Action Sidebars Triggers, User Tasks & User Profile -->
-            <div class="portal-nav-right" style="display:flex;align-items:center;gap:10px;">
+            <div class="portal-nav-right">
                 <!-- Button Trigger: Action Sidebar (NG Items) -->
-                <button id="btn-open-actions" class="nav-action-btn btn-nav-action" type="button" title="Buka Daftar Temuan NG & Tindakan">
+                <button id="btn-open-actions" class="nav-action-btn btn-nav-action" type="button" title="Buka Daftar Temuan NG &amp; Tindakan">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                    <span>Action (NG)</span>
+                    <span class="btn-text">Action (NG)</span>
                     <span id="action-badge-count" class="nav-badge-count">0</span>
                 </button>
 
                 <!-- Button Trigger: Reporting Sidebar -->
                 <button id="btn-open-reporting" class="nav-action-btn btn-nav-report" type="button" title="Buka Formulir Laporan Pemeliharaan">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <span>Reporting</span>
+                    <span class="btn-text">Reporting</span>
                 </button>
 
                 <!-- Button Trigger: User Inspection Tasks (Notification for Technician) -->
                 <button id="btn-user-tasks" class="nav-action-btn btn-nav-tasks" type="button" title="Lihat Penugasan Inspeksi Hari Ini">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    <span>Tugas Saya</span>
+                    <span class="btn-text">Tugas Saya</span>
                     <span id="tasks-badge-count" class="nav-badge-count task-badge" style="display:none;">0</span>
                 </button>
 
                 <!-- Button Trigger: Assign Jobs (Leader Only) -->
                 <button id="btn-open-assignment" class="nav-action-btn btn-nav-assign" type="button" title="Tugaskan Jadwal Inspeksi (Leader)" style="display:none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span>Penugasan</span>
+                    <span class="btn-text">Penugasan</span>
                 </button>
 
                 <!-- User Profile Pill -->
-                <div class="portal-user-wrap" style="display:flex;align-items:center;gap:6px;background:#f8fafc;padding:3px 10px;border-radius:8px;border:1px solid #e2e8f0;">
-                    <div class="portal-user-avatar" style="width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;color:#475569;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <div class="portal-user-wrap">
+                    <div class="portal-user-avatar">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     </div>
-                    <div style="line-height:1.2;">
-                        <span id="active-user-name" style="font-size:12px;font-weight:700;color:#0f172a;">Pengguna</span>
+                    <div class="portal-user-info">
+                        <span id="active-user-name" class="portal-user-name">Pengguna</span>
                         <span id="active-user-role" class="user-role-badge role-user">User</span>
                     </div>
-                    <button id="btn-logout" class="btn-logout" type="button" title="Keluar / Logout" style="margin-left:4px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <button id="btn-logout" class="btn-logout" type="button" title="Keluar / Logout">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
                 </div>
             </div>
@@ -181,20 +181,20 @@ setTimeout(function() {
     <section class="portal-kpi-bar">
         <div class="kpi-grid">
             <div class="kpi-card">
-                <span class="kpi-label">Katalog Mesin:</span>
-                <span id="kpi-total-machines" class="kpi-val">4 Tipe (8 Unit)</span>
+                <span class="kpi-label">Total Unit Mesin</span>
+                <span id="kpi-total-machines" class="kpi-val">8 Unit</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">Form Standar (STD):</span>
-                <span id="kpi-active-forms" class="kpi-val">Chiller &amp; Air Dryer</span>
+                <span class="kpi-label">Kategori Mesin</span>
+                <span id="kpi-active-forms" class="kpi-val">4 Tipe Mesin</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">Action Today (NG):</span>
-                <span id="kpi-action-today" class="kpi-val" style="color:#b91c1c;">0</span>
+                <span class="kpi-label">Action Today (NG)</span>
+                <span id="kpi-action-today" class="kpi-val" style="color:#b91c1c;">0 Item</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">Action Backlog:</span>
-                <span id="kpi-action-backlog" class="kpi-val" style="color:#d97706;">0</span>
+                <span class="kpi-label">Action Backlog</span>
+                <span id="kpi-action-backlog" class="kpi-val" style="color:#d97706;">0 Item</span>
             </div>
         </div>
     </section>
@@ -218,19 +218,13 @@ setTimeout(function() {
                 </div>
 
                 <!-- Gedung Filter Pills -->
-                <div class="building-filters" style="display:flex;gap:6px;align-items:center;">
-                    <span style="font-size:11.5px;font-weight:700;color:#64748b;margin-right:2px;">Gedung:</span>
+                <div class="building-filters">
+                    <span class="building-label">Gedung:</span>
                     <button class="filter-pill filter-building active" data-building="all" type="button">Semua Gedung</button>
                     <button class="filter-pill filter-building" data-building="Gedung A" type="button">Gedung A</button>
                     <button class="filter-pill filter-building" data-building="Gedung B" type="button">Gedung B</button>
                     <button class="filter-pill filter-building" data-building="Gedung C" type="button">Gedung C</button>
                 </div>
-
-                <div style="width:1px;height:20px;background:#e2e8f0;margin:0 4px;"></div>
-
-                <!-- Equipment Focus Filter -->
-                <button class="filter-pill filter-focus active" data-focus="all" type="button">Semua Alat</button>
-                <button class="filter-pill filter-focus" data-focus="std" type="button" title="Hanya peralatan dengan Standar Preventif lengkap">⭐ Fokus STD (Chiller &amp; Air Dryer)</button>
             </div>
 
             <!-- Status Select Dropdown -->
@@ -335,6 +329,20 @@ setTimeout(function() {
             </button>
         </div>
     </header>
+
+    <!-- Active Task Banner when opened from Leader Assignment -->
+    <div id="assignment-task-banner" class="assignment-task-banner no-print" style="display:none;">
+        <div class="atb-left">
+            <span class="atb-badge">Penugasan Leader Aktif</span>
+            <span id="atb-info-text">Inspeksi Unit</span>
+            <span id="atb-notes-text" class="atb-notes"></span>
+        </div>
+        <div class="atb-right">
+            <button type="button" id="btn-complete-active-task" class="btn-complete-task">
+                ✔ Selesaikan &amp; Konfirmasi Tugas
+            </button>
+        </div>
+    </div>
 
     <main id="stage"><div id="sheet-wrap"><div id="sheet"></div></div></main>
 </div>
@@ -487,49 +495,69 @@ setTimeout(function() {
 <!-- 5. MODAL DIALOG: PENUGASAN JADWAL (LEADER ONLY)                           -->
 <!-- ========================================================================= -->
 <dialog id="dlg-assignment" class="modal-dlg">
-    <div class="modal-card">
+    <div class="modal-card modal-card-lg">
         <div class="modal-header">
             <div style="display:flex;align-items:center;gap:10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <h3>Tugaskan Jadwal Inspeksi (Job Assignment)</h3>
+                <h3>Manajemen Penugasan Inspeksi (Leader)</h3>
             </div>
             <button id="dlg-assignment-close" type="button" style="border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
         </div>
+
+        <div class="sidebar-nav-tabs" style="border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:0 16px;">
+            <button id="tab-assign-form" class="sidebar-tab-btn active" type="button">
+                ✍️ Beri Tugas Baru
+            </button>
+            <button id="tab-assign-history" class="sidebar-tab-btn" type="button">
+                📋 Monitoring Status Teknisi
+            </button>
+        </div>
+
         <div class="modal-body">
-            <form id="form-assignment" onsubmit="return false;">
-                <div class="report-form-group">
-                    <label for="assign-instance">Pilih Alat &amp; Lokasi:</label>
-                    <select id="assign-instance" required></select>
-                </div>
-
-                <div class="modal-grid-2">
+            <!-- Panel 1: Form Penugasan -->
+            <div id="panel-assign-form">
+                <form id="form-assignment" onsubmit="return false;">
                     <div class="report-form-group">
-                        <label for="assign-date">Tanggal Jadwal:</label>
-                        <input type="date" id="assign-date" required>
+                        <label for="assign-instance">Pilih Alat &amp; Lokasi Gedung:</label>
+                        <select id="assign-instance" required></select>
                     </div>
+
+                    <div class="modal-grid-2">
+                        <div class="report-form-group">
+                            <label for="assign-date">Tanggal Jadwal Inspeksi:</label>
+                            <input type="date" id="assign-date" required>
+                        </div>
+                        <div class="report-form-group">
+                            <label for="assign-type">Periode Inspeksi:</label>
+                            <select id="assign-type">
+                                <option value="DAILY">Harian (Daily)</option>
+                                <option value="MONTHLY">Bulanan (Monthly)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="report-form-group">
-                        <label for="assign-type">Periode Inspeksi:</label>
-                        <select id="assign-type">
-                            <option value="DAILY">Harian (Daily)</option>
-                            <option value="MONTHLY">Bulanan (Monthly)</option>
-                        </select>
+                        <label for="assign-user">Tugaskan ke Teknisi (User):</label>
+                        <select id="assign-user" required></select>
                     </div>
-                </div>
 
-                <div class="report-form-group">
-                    <label for="assign-user">Tugaskan ke Teknisi (User):</label>
-                    <select id="assign-user" required></select>
-                </div>
+                    <div class="report-form-group">
+                        <label for="assign-notes">Instruksi / Catatan Tambahan untuk Teknisi:</label>
+                        <input type="text" id="assign-notes" placeholder="Misal: Periksa getaran fan &amp; suhu kerja teliti">
+                    </div>
 
-                <div class="report-form-group">
-                    <label for="assign-notes">Catatan Tambahan untuk Teknisi:</label>
-                    <input type="text" id="assign-notes" placeholder="Misal: Periksa getaran fan &amp; suhu lebih teliti">
-                </div>
+                    <button type="submit" id="btn-save-assignment" class="btn-submit-report" style="margin-top:10px;">
+                        Simpan Penugasan
+                    </button>
+                </form>
+            </div>
 
-                <button type="submit" id="btn-save-assignment" class="btn-submit-report" style="margin-top:10px;">
-                    ✅ Simpan Penugasan
-                </button>
-            </form>
+            <!-- Panel 2: Monitoring Penugasan Leader -->
+            <div id="panel-assign-history" style="display:none;">
+                <div id="assignment-monitoring-list">
+                    <div style="text-align:center;padding:24px;color:#94a3b8;">Memuat data status penugasan...</div>
+                </div>
+            </div>
         </div>
     </div>
 </dialog>
@@ -546,6 +574,16 @@ setTimeout(function() {
             </div>
             <button id="dlg-user-tasks-close" type="button" style="border:none;background:transparent;color:#93c5fd;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
         </div>
+
+        <div class="sidebar-nav-tabs" style="border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:0 16px;">
+            <button id="tab-tasks-pending" class="sidebar-tab-btn active" type="button">
+                ⏳ Belum Dikerjakan <span id="count-pending-tasks" style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:999px;font-size:10px;margin-left:4px;">0</span>
+            </button>
+            <button id="tab-tasks-done" class="sidebar-tab-btn" type="button">
+                ✔ Riwayat Selesai
+            </button>
+        </div>
+
         <div class="modal-body" id="user-tasks-body">
             <!-- Populated dynamically via JS -->
         </div>

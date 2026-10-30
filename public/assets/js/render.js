@@ -175,7 +175,7 @@ function renderChillerDailyWeeklySheet(S, extraRows = 0) {
   dailyItems.forEach((it, idx) => {
     const rm = S.remarks[it.id] !== undefined ? S.remarks[it.id] : (it.standard || '');
     out.push(`<tr class="item">
-      ${idx === 0 ? td('CHILLER LSBLG250', { r: dailyItems.length, cl: 'unit-v' }) : ''}
+      ${idx === 0 ? td(esc(T.machine_type || 'CHILLER LSBLG250'), { r: dailyItems.length, cl: 'unit-v' }) : ''}
       ${td(it.no, { cl: 'c t' })}${td(esc(it.part), { cl: 't b' })}${td(esc(it.method), { cl: 'c t' })}
       ${td(esc(it.period), { cl: 'c t' })}${td(esc(it.inst || ''), { cl: 'c t' })}${td('I', { cl: 'c t b' })}
       ${days.map((d) => {
@@ -217,7 +217,7 @@ function renderChillerDailyWeeklySheet(S, extraRows = 0) {
     }).join('');
 
     out.push(`<tr class="${rowClass}">
-      ${idx === 0 ? td('CHILLER LSBLG250', { r: totalWeeklyRows, cl: 'unit-v' }) : ''}
+      ${idx === 0 ? td(esc(T.machine_type || 'CHILLER LSBLG250'), { r: totalWeeklyRows, cl: 'unit-v' }) : ''}
       ${td(isBlank ? '' : (idx + 1), { cl: 'c t' })}
       ${td(isBlank ? '' : esc(it.part), { cl: 't b' })}
       ${td(isBlank ? '' : esc(it.method), { cl: 'c t' })}
@@ -269,7 +269,7 @@ function renderChillerMonthlySheet(S, extraRows = 0) {
   items.forEach((it, idx) => {
     const rm = S.remarks[it.id] !== undefined ? S.remarks[it.id] : (it.standard || '');
     out.push(`<tr class="item">
-      ${idx === 0 ? td('CHILLER LSBLG250', { r: items.length, cl: 'unit-v' }) : ''}
+      ${idx === 0 ? td(esc(T.machine_type || 'CHILLER LSBLG250'), { r: items.length, cl: 'unit-v' }) : ''}
       ${td(it.no, { cl: 'c t' })}${td(esc(it.part), { cl: 't b' })}${td(esc(it.method), { cl: 't' })}
       ${td(esc(it.period), { cl: 'c t' })}${td(esc(it.inst || ''), { cl: 'c t' })}
       ${Array.from({ length: 12 }, (_, i) => {
@@ -386,7 +386,7 @@ function renderChillerStandardSheet(S) {
   items.forEach((it, idx) => {
     const dInfo = displayMap[it.no] || { num: it.no, span: 1 };
     out.push(`<tr class="item" style="height:24px">
-      ${idx === 0 ? td('A. AIR DRYER', { r: 30, cl: 'unit-v', at: 'style="font-weight:700;letter-spacing:2px;background:#f8fafc;text-align:center;"' }) : ''}
+      ${idx === 0 ? td('A. CHILLER LSBLG250', { r: 30, cl: 'unit-v', at: 'style="font-weight:700;letter-spacing:2px;background:#f8fafc;text-align:center;"' }) : ''}
       ${!dInfo.skipHeader ? td(dInfo.num, { r: dInfo.span, cl: 'c t b' }) : ''}
       ${!dInfo.skipHeader ? td(esc(it.part), { r: dInfo.span, cl: 't b' }) : ''}
       ${td(esc(it.method), { cl: 't' })}
@@ -421,6 +421,155 @@ function renderChillerStandardSheet(S) {
         <div style="font-weight:600;">1/ 4 Bln &nbsp;:&nbsp; 4000 jam</div>
         <div style="font-weight:600;">1/6 Bln &nbsp;:&nbsp; 8000 jam</div>
         <div style="font-weight:600;">1/1 Thn &nbsp;:&nbsp; 12000 jam</div>
+      </div>
+    </div>`, { c: 4, at: 'style="vertical-align:top;padding:6px;"' })}
+    ${td(`<div>
+      <div style="font-weight:700;font-size:11px;margin-bottom:4px;color:#0f172a;">Tugas</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse;border:none;">
+        <tr style="height:20px;">
+          <td style="border:none;padding:2px 6px;"><b>A</b> &nbsp; Adjust/setting</td>
+          <td style="border:none;padding:2px 6px;"><b>K</b> &nbsp; Kencangkan</td>
+        </tr>
+        <tr style="height:20px;">
+          <td style="border:none;padding:2px 6px;"><b>B</b> &nbsp; Bersihkan</td>
+          <td style="border:none;padding:2px 6px;"><b>S</b> &nbsp; Service</td>
+        </tr>
+        <tr style="height:20px;">
+          <td style="border:none;padding:2px 6px;"><b>C</b> &nbsp; Cek/Periksa</td>
+          <td style="border:none;padding:2px 6px;"><b>T</b> &nbsp; Tambah</td>
+        </tr>
+        <tr style="height:20px;">
+          <td style="border:none;padding:2px 6px;"><b>G</b> &nbsp; Ganti</td>
+          <td style="border:none;padding:2px 6px;"><b>U</b> &nbsp; Ukur</td>
+        </tr>
+      </table>
+    </div>`, { c: 6, at: 'style="vertical-align:top;padding:6px;"' })}
+  </tr>`);
+
+  out.push('</tbody></table>');
+  return out.join('');
+}
+
+// ------------------------------------------------------------------ 5. Air Dryer Standard Preventive Machine (AD_S)
+function renderAirDryerStandardSheet(S) {
+  const { sheet: sh, template: T } = S;
+  const widths = [190, 190, 40, 35, 165, 95, 75, 40, 125, 125, 90, 90];
+  const out = [];
+
+  out.push(`<table class="cs"><colgroup>${widths.map((w) => `<col style="width:${w}px">`).join('')}</colgroup><tbody>`);
+
+  // Row 1: Header Kop Form-PLS-MTC-D04 (spans 12 columns)
+  out.push(`<tr style="height:84px">
+    ${td(`<div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+      <img src="${esc(window.CS?.logo || '')}" alt="CBI" style="max-height:48px;">
+      <div style="font-size:11px;font-weight:700;color:#0f172a;line-height:1.2;text-align:left;">PT. Century Batteries<br>Indonesia</div>
+    </div>`, { c: 2, cl: 'logo-cell med' })}
+    ${td('STANDARD<br>PREVENTIVE MACHINE', { c: 2, cl: 'title', at: 'style="font-size:16px;font-weight:800;letter-spacing:0.5px;"' })}
+    ${td(`<table>
+      <tr><td class="l">Dept.</td><td>: <b>${esc(T.department || 'PLANT SERVICE')}</b></td></tr>
+      <tr><td class="l">Seksi</td><td>: <b>${esc(T.section || 'MAINTENANCE')}</b></td></tr>
+      <tr><td class="l">M/C type</td><td>: <b>${esc(T.machine_type || 'AIR DRYER FRIULAIR ACT55/80')}</b></td></tr>
+    </table>`, { c: 2, cl: 'meta' })}
+    ${td('AIR DRYER FRIULAIR ACT 55', { cl: 'c b', at: 'style="font-size:13px;background:#f8fafc;vertical-align:middle;padding:4px;font-weight:700;"' })}
+    ${td(`<table>
+      <tr><td class="l">No Form</td><td>: <b>${esc(T.form_no || 'Form-PLS-MTC-D04')}</b></td></tr>
+      <tr><td class="l">Revisi</td><td>: <b>${esc(T.revision || '0')}</b></td></tr>
+      <tr><td class="l">Page</td><td>: <b>${esc(T.page_info || '1 dari 1')}</b></td></tr>
+    </table>`, { c: 2, cl: 'meta' })}
+    ${signBox(S, 'KADEPT', 'Ka.Dept PLS')}
+    ${signBox(S, 'KASIE', 'Ka.Sie PLS')}
+    ${signBox(S, 'KASUBSIE', 'Staff')}
+  </tr>`);
+
+  // Row 2: Table Header & Left Photo Panel (Layout Friulair ACT 55 + FTX/FTS)
+  // Left Photo Panel spans 28 rows
+  out.push(`<tr style="height:28px">
+    ${td(`<div class="std-photo-panel" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-weight:700;font-size:12px;color:#1e293b;text-align:center;padding:4px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;">
+        AIR DYER ACT 55
+      </div>
+      <div style="border:1px solid #000;border-radius:3px;overflow:hidden;background:#fff;padding:6px;cursor:zoom-in;" title="Layout Friulair ACT 55 / ACT 360">
+        <img src="${esc(assetUrl('assets/img/air_dryer/image3.png'))}" alt="Friulair ACT 55" style="width:100%;height:auto;display:block;">
+      </div>
+      <div style="border:1px solid #000;border-radius:3px;overflow:hidden;background:#fff;padding:6px;cursor:zoom-in;" title="Filter Pre FTX & After FTS">
+        <img src="${esc(assetUrl('assets/img/air_dryer/image4.png'))}" alt="FTX dan FTS Diagram" style="width:100%;height:auto;display:block;">
+      </div>
+      <div style="font-size:10px;color:#334155;line-height:1.5;padding:6px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:3px;">
+        <b>Keterangan Diagram Acuan:</b><br>
+        &bull; <b>C.4</b> : Indikator Dew Point (Monitor depan)<br>
+        &bull; <b>A.7</b> : Filter Kondensor (Kisi bawah)<br>
+        &bull; <b>C.2</b> : Kompresor Refrigerasi (Samping)<br>
+        &bull; <b>FTX</b> : Pre Filter &bull; <b>FTS</b> : After Filter
+      </div>
+    </div>`, { c: 2, r: 28, at: 'style="vertical-align:top;width:380px;padding:6px;background:#fff;border-right:2px solid #000;"' })}
+    ${td('UNIT', { cl: 'hd med' })}
+    ${td('ITEM CHECK', { c: 2, cl: 'hd med' })}
+    ${td('CONTENTS', { cl: 'hd med' })}
+    ${td('Frek', { cl: 'hd med' })}
+    ${td('Act', { cl: 'hd med' })}
+    ${td('STANDARD', { c: 2, cl: 'hd med' })}
+    ${td('DOCUMENT', { cl: 'hd med' })}
+    ${td('SAFETY STD', { cl: 'hd med' })}
+  </tr>`);
+
+  // Row 3: Subheader A.GENERAL MAINTENACE
+  out.push(`<tr style="height:24px">
+    ${td('AIR DYER ACT 55', { r: 26, cl: 'unit-v', at: 'style="font-weight:700;letter-spacing:2px;background:#f8fafc;text-align:center;"' })}
+    ${td('A.GENERAL MAINTENACE', { c: 9, cl: 'b sect', at: 'style="font-weight:700;letter-spacing:1px;background:#f8fafc;padding-left:8px;"' })}
+  </tr>`);
+
+  // 14 item rows from ACT80 Form-PLS-MTC-D04 standard
+  const adItems = [
+    { no: 1, part: 'INDIKATOR POWER', contents: 'KONDISI', frek: '1x /Day', act: 'C', std: 'LAMPU MENYALA' },
+    { no: 2, part: 'DUE POINT INDIKATOR', contents: 'KONDISI', frek: '1x /Day', act: 'C', std: 'TIDAK ADA INDIKATOR ALARM MENYALA' },
+    { no: 3, part: 'EMERGENCY STOP', contents: 'FUNGSI', frek: '1x/Week', act: 'C', std: 'EMERGENCY BERFUNGSI' },
+    { no: 4, part: 'BODY MESIN', contents: 'KEBERSIHAN', frek: '1x/Week', act: 'B', std: 'BODY MESIN BERSIH' },
+    { no: 5, part: 'TEMPERATUR KERJA', contents: 'KONDISI', frek: '1x /Day', act: 'C', std: '70 S/D 100 C' },
+    { no: 6, part: 'CHECK KEBOCORAN ANGIN', contents: 'KONDISI', frek: '1x/Week', act: 'C', std: 'TIDAK ADA UDARA BOCOR PADA PIPA' },
+    { no: 7, part: 'FILTER KONDENSOR', contents: 'KEBERSIHAN', frek: '1x/Week', act: 'B', std: 'TIDAK KOTOR / BERDEBU' },
+    { no: 8, part: 'KOMPRESOR', contents: 'FUNGSI', frek: '1x /Day', act: 'C', std: 'RUNNING TANPA VIBRASI' },
+    { no: 9, part: 'FAN KONDENSOR', contents: 'FUNGSI', frek: '1x /Day', act: 'C', std: 'RUNNING TANPA VIBRASI' },
+    { no: 10, part: 'PRE FILTER DRYER', contents: 'KEBERSIHAN', frek: '1x/Week', act: 'B', std: 'BERSIHKAN FILTER CATRIDE', span: 2 },
+    { no: 11, part: 'PRE FILTER DRYER', contents: 'PERGANTIAN', frek: '1x/6 bulan', act: 'G', std: 'GANTI FILTER CATRIDE ELEMENT', skipHdr: true },
+    { no: 12, part: 'AFTER FILTER DRYER', contents: 'KEBERSIHAN', frek: '1x/Week', act: 'B', std: 'BERSIHKAN FILTER CATRIDE', span: 2 },
+    { no: 13, part: 'AFTER FILTER DRYER', contents: 'PERGANTIAN', frek: '1x/6 bulan', act: 'G', std: 'GANTI FILTER CATRIDE ELEMENT', skipHdr: true },
+    { no: 14, part: 'AUTO DRAIN', contents: 'FUNGSI', frek: '1x /Day', act: 'C', std: 'BERSIHKAN' },
+  ];
+
+  adItems.forEach((it) => {
+    out.push(`<tr class="item" style="height:24px">
+      ${!it.skipHdr ? td(it.no === 11 ? 10 : (it.no === 14 ? 13 : it.no), { r: it.span || 1, cl: 'c t b' }) : ''}
+      ${!it.skipHdr ? td(esc(it.part), { r: it.span || 1, cl: 't b' }) : ''}
+      ${td(esc(it.contents), { cl: 't' })}
+      ${td(esc(it.frek), { cl: 'c t' })}
+      ${td(esc(it.act), { cl: 'c t b' })}
+      ${td(esc(it.std), { c: 2, cl: 't' })}
+      ${td('CS', { cl: 'c t' })}
+      ${td('APD STANDARD', { cl: 'c t b', at: 'style="color:#0f172a;font-size:11px;"' })}
+    </tr>`);
+  });
+
+  // 11 empty dashed rows (matching Sheet ACT80 Form-PLS-MTC-D04)
+  for (let r = 0; r < 11; r++) {
+    const isWatermarkRow = (r === 4);
+    out.push(`<tr class="dashed-row" style="height:22px">
+      ${td('', { cl: 'c' })}
+      ${td('', { cl: 't' })}
+      ${td('', { cl: 't' })}
+      ${td('', { cl: 'c' })}
+      ${td('', { cl: 'c' })}
+      ${td(isWatermarkRow ? '<span style="font-size:36px;color:#cbd5e1;font-weight:700;letter-spacing:6px;opacity:0.4;">Halaman 1</span>' : '', { c: 2, cl: 't c', at: isWatermarkRow ? 'style="position:relative;"' : '' })}
+      ${td('', { cl: 'c' })}
+      ${td('', { cl: 'c' })}
+    </tr>`);
+  }
+
+  // Row 28: Catatan & Tugas Legend (spans columns 3-12, total 10 columns)
+  out.push(`<tr style="height:100px">
+    ${td(`<div>
+      <div style="font-weight:700;font-size:11px;margin-bottom:4px;color:#0f172a;">Catatan</div>
+      <div style="border:1px solid #000;padding:8px 12px;background:#f8fafc;font-size:11px;line-height:1.6;min-height:64px;">
+        <div style="color:#64748b;font-style:italic;">Catatan inspeksi atau tindakan preventif khusus...</div>
       </div>
     </div>`, { c: 4, at: 'style="vertical-align:top;padding:6px;"' })}
     ${td(`<div>
@@ -724,13 +873,16 @@ function renderFindings(out, S, extraRows, totalCols) {
 
 // ------------------------------------------------------------------ Main renderSheet Dispatcher
 export function renderSheet(S, extraRows = 0) {
+  if (S.template.code === 'AD_S') {
+    return renderAirDryerStandardSheet(S);
+  }
   if (S.template.code === 'CHILLER_S') {
     return renderChillerStandardSheet(S);
   }
-  if (S.template.code === 'CHILLER_M') {
+  if (S.template.code === 'CHILLER_M' || S.template.code === 'AD_M') {
     return renderChillerMonthlySheet(S, extraRows);
   }
-  if (S.template.code === 'CHILLER_D') {
+  if (S.template.code === 'CHILLER_D' || S.template.code === 'AD_D') {
     return renderChillerDailyWeeklySheet(S, extraRows);
   }
   return renderStandardSheet(S, extraRows);
