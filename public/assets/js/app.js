@@ -461,12 +461,15 @@ function showActiveTaskBanner(task) {
   if (notesEl) {
     notesEl.textContent = task.notes ? `Catatan Leader: "${task.notes}"` : '';
   }
-  banner.style.display = 'flex';
+  banner.classList.add('active');
+  banner.style.setProperty('display', 'flex', 'important');
 }
 
 function hideActiveTaskBanner() {
   const banner = $('#assignment-task-banner');
-  if (banner) banner.style.display = 'none';
+  if (!banner) return;
+  banner.classList.remove('active');
+  banner.style.setProperty('display', 'none', 'important');
 }
 
 async function showWorkstation(tplCode) {
@@ -495,11 +498,36 @@ async function showWorkstation(tplCode) {
   if ($('#period-next')) $('#period-next').title = isAnnualOrStd ? 'Tahun berikutnya' : 'Bulan berikutnya';
 
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  const savedActiveTask = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+  let savedActiveTask = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
   if (savedActiveTask) {
     showActiveTaskBanner(savedActiveTask);
   } else {
-    hideActiveTaskBanner();
+    const u = getCurrentUser();
+    const curUnit = localStorage.getItem('cs_unit_code');
+    if (u && curUnit) {
+      api.assignments('all', u.id).then((list) => {
+        const match = (list || []).find((a) => a.status !== 'COMPLETED' && a.instance_code === curUnit);
+        if (match) {
+          const isDaily = match.inspection_type === 'DAILY';
+          const autoTask = {
+            id: match.id,
+            tpl: ui.tpl,
+            inst: match.instance_code,
+            name: match.instance_name,
+            bld: match.building,
+            loc: match.room_location,
+            notes: match.notes,
+            type: isDaily ? 'Harian (Daily)' : 'Bulanan (Monthly)'
+          };
+          localStorage.setItem('cs_active_task', JSON.stringify(autoTask));
+          showActiveTaskBanner(autoTask);
+        } else {
+          hideActiveTaskBanner();
+        }
+      }).catch(() => hideActiveTaskBanner());
+    } else {
+      hideActiveTaskBanner();
+    }
   }
   await openSheet();
 }
@@ -1658,20 +1686,51 @@ function setupEventListeners() {
   $('#tab-tasks-done')?.addEventListener('click', () => renderUserTasksList('done'));
 
   // Workstation Active Task Complete Button
-  $('#btn-complete-active-task')?.addEventListener('click', async () => {
-    const saved = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
-    if (!saved || !saved.id) {
-      hideActiveTaskBanner();
-      return;
+  $('#btn-complete-active-task')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const btn = $('#btn-complete-active-task');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan...';
     }
+
     try {
-      await api.updateAssignmentStatus(saved.id, 'COMPLETED');
+      let saved = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+      let taskId = saved?.id;
+      let unitCode = saved?.inst || localStorage.getItem('cs_unit_code');
+
+      // Fallback: If no saved task ID in localStorage, find any pending assignment for this user & unit
+      if (!taskId) {
+        const u = getCurrentUser();
+        if (u) {
+          const list = await api.assignments('all', u.id);
+          const match = (list || []).find((a) => a.status !== 'COMPLETED' && (!unitCode || a.instance_code === unitCode));
+          if (match) {
+            taskId = match.id;
+            unitCode = match.instance_code;
+          }
+        }
+      }
+
+      if (taskId) {
+        await api.updateAssignmentStatus(taskId, 'COMPLETED');
+        toast(`✔ Tugas penugasan inspeksi [${unitCode || 'Mesin'}] berhasil diselesaikan & dikonfirmasi!`, 'ok');
+      } else {
+        toast('✔ Konfirmasi pemeriksaan unit berhasil disimpan.', 'ok');
+      }
+
       localStorage.removeItem('cs_active_task');
       hideActiveTaskBanner();
-      toast(`✔ Tugas penugasan inspeksi ${saved.inst} berhasil diselesaikan!`, 'ok');
       await loadUserTasks(false);
     } catch (err) {
       toast('Gagal menyelesaikan tugas: ' + err.message, 'err');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '✔ Selesaikan & Konfirmasi Tugas';
+      }
     }
   });
 
