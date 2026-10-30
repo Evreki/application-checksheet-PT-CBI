@@ -484,22 +484,66 @@ function renderAirDryerStandardSheet(S) {
   // Row 2: Table Header & Left Photo Panel (Layout Friulair ACT 55 + FTX/FTS)
   // Left Photo Panel spans 28 rows
   out.push(`<tr style="height:28px">
-    ${td(`<div class="std-photo-panel" style="display:flex;flex-direction:column;gap:8px;">
-      <div style="font-weight:700;font-size:12px;color:#1e293b;text-align:center;padding:4px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;">
-        AIR DYER ACT 55
+    ${td(`<div class="std-photo-panel" style="display:flex;flex-direction:column;gap:10px;">
+      <!-- Judul Panel -->
+      <div style="font-weight:700;font-size:12px;color:#1e293b;text-align:center;padding:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;letter-spacing:0.5px;">
+        LAYOUT &amp; FOTO STANDAR PREVENTIVE AIR DRYER ACT 55
       </div>
-      <div style="border:1px solid #000;border-radius:3px;overflow:hidden;background:#fff;padding:6px;cursor:zoom-in;" title="Layout Friulair ACT 55 / ACT 360">
-        <img src="${esc(assetUrl('assets/img/air_dryer/image3.png'))}" alt="Friulair ACT 55" style="width:100%;height:auto;display:block;">
+
+      <!-- 1. Diagram Master Utuh Form-PLS-MTC-D04 -->
+      <div style="border:1.5px solid #0f172a;border-radius:4px;overflow:hidden;background:#fff;padding:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);" title="Diagram Master SOP Form-PLS-MTC-D04">
+        <div style="font-size:10.5px;font-weight:700;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;">
+          <span>📐 Diagram Acuan (Callout C.4, A.7, C.2 &amp; FTX/FTS)</span>
+          <span style="font-size:9.5px;color:#64748b;font-weight:normal;">Form-PLS-MTC-D04</span>
+        </div>
+        <img src="${esc(assetUrl('assets/img/air_dryer/std_air_dryer_diagram.png'))}" alt="Diagram Master Air Dryer ACT 55" style="width:100%;height:auto;display:block;margin:0 auto;border:1px solid #e2e8f0;border-radius:3px;">
       </div>
-      <div style="border:1px solid #000;border-radius:3px;overflow:hidden;background:#fff;padding:6px;cursor:zoom-in;" title="Filter Pre FTX & After FTS">
-        <img src="${esc(assetUrl('assets/img/air_dryer/image4.png'))}" alt="FTX dan FTS Diagram" style="width:100%;height:auto;display:block;">
+
+      <!-- 2. Galeri Foto Fisik Asli Komponen (Unit & Filter Cartridge) -->
+      <div style="border:1px solid #cbd5e1;border-radius:4px;background:#fff;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="font-size:10.5px;font-weight:700;color:#0f172a;margin-bottom:6px;">
+          📷 Foto Fisik Mesin &amp; Filter Cartridge (Friulair)
+        </div>
+        
+        <!-- Grid 2x2 Foto Komponen -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+          <!-- Foto 1: ACT 55 Front -->
+          <div style="border:1px solid #e2e8f0;border-radius:3px;padding:4px;text-align:center;background:#f8fafc;">
+            <img src="${esc(assetUrl('assets/img/air_dryer/act55_front.jpg'))}" alt="Air Dryer ACT 55" style="height:90px;max-width:100%;object-fit:contain;margin:0 auto;display:block;">
+            <div style="font-size:9.5px;font-weight:700;color:#1e293b;margin-top:3px;">Unit ACT 55</div>
+            <div style="font-size:8.5px;color:#64748b;">(Body &amp; Dew Point)</div>
+          </div>
+
+          <!-- Foto 2: ACT 360 Cutaway -->
+          <div style="border:1px solid #e2e8f0;border-radius:3px;padding:4px;text-align:center;background:#f8fafc;">
+            <img src="${esc(assetUrl('assets/img/air_dryer/act360_cutaway.jpg'))}" alt="ACT Internal Cutaway" style="height:90px;max-width:100%;object-fit:contain;margin:0 auto;display:block;">
+            <div style="font-size:9.5px;font-weight:700;color:#1e293b;margin-top:3px;">Internal Mesin</div>
+            <div style="font-size:8.5px;color:#64748b;">(Kondensor &amp; Kompresor)</div>
+          </div>
+
+          <!-- Foto 3: Filter FTX -->
+          <div style="border:1px solid #e2e8f0;border-radius:3px;padding:4px;text-align:center;background:#f8fafc;">
+            <img src="${esc(assetUrl('assets/img/air_dryer/filter_ftx.jpg'))}" alt="Filter Cartridge FTX" style="height:90px;max-width:100%;object-fit:contain;margin:0 auto;display:block;">
+            <div style="font-size:9.5px;font-weight:700;color:#1e293b;margin-top:3px;">Pre-Filter FTX</div>
+            <div style="font-size:8.5px;color:#64748b;">(Inlet Air Dryer)</div>
+          </div>
+
+          <!-- Foto 4: Filter FTS -->
+          <div style="border:1px solid #e2e8f0;border-radius:3px;padding:4px;text-align:center;background:#f8fafc;">
+            <img src="${esc(assetUrl('assets/img/air_dryer/filter_fts.jpg'))}" alt="Filter Cartridge FTS" style="height:90px;max-width:100%;object-fit:contain;margin:0 auto;display:block;">
+            <div style="font-size:9.5px;font-weight:700;color:#1e293b;margin-top:3px;">After-Filter FTS</div>
+            <div style="font-size:8.5px;color:#64748b;">(Outlet Air Dryer)</div>
+          </div>
+        </div>
       </div>
-      <div style="font-size:10px;color:#334155;line-height:1.5;padding:6px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:3px;">
-        <b>Keterangan Diagram Acuan:</b><br>
-        &bull; <b>C.4</b> : Indikator Dew Point (Monitor depan)<br>
-        &bull; <b>A.7</b> : Filter Kondensor (Kisi bawah)<br>
-        &bull; <b>C.2</b> : Kompresor Refrigerasi (Samping)<br>
-        &bull; <b>FTX</b> : Pre Filter &bull; <b>FTS</b> : After Filter
+
+      <!-- 3. Keterangan Callout & Standar Tugas -->
+      <div style="font-size:10px;color:#334155;line-height:1.5;padding:6px 8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:3px;">
+        <b>Keterangan Callout Diagram Acuan:</b><br>
+        &bull; <b>C.4</b> : Indikator Dew Point (Monitor panel depan)<br>
+        &bull; <b>A.7</b> : Filter Kondensor (Pembersihan kisi bawah mingguan)<br>
+        &bull; <b>C.2</b> : Kompresor Refrigerasi (Suhu kerja 70-100°C)<br>
+        &bull; <b>FTX / FTS</b> : Filter Cartridge (Pembersihan 1x/mgg, Ganti 1x/6 bln)
       </div>
     </div>`, { c: 2, r: 28, at: 'style="vertical-align:top;width:380px;padding:6px;background:#fff;border-right:2px solid #000;"' })}
     ${td('UNIT', { cl: 'hd med' })}
