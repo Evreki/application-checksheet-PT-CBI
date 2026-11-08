@@ -100,6 +100,34 @@ setTimeout(function() {
                     <span>Masuk ke Portal</span>
                     <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </button>
+
+                <div class="login-quick-divider">
+                    <span>Masuk Otomatis (Trial)</span>
+                </div>
+
+                <div class="login-quick-grid">
+                    <button type="button" class="btn-quick-user quick-btn-leader" data-user="leader" title="Masuk sebagai Leader (Bambang S.)">
+                        <span class="quick-icon">👑</span>
+                        <div class="quick-info">
+                            <strong>Leader</strong>
+                            <small>Bambang S.</small>
+                        </div>
+                    </button>
+                    <button type="button" class="btn-quick-user quick-btn-user" data-user="user1" title="Masuk sebagai User 1 (Ahmad S.)">
+                        <span class="quick-icon">🔧</span>
+                        <div class="quick-info">
+                            <strong>User 1</strong>
+                            <small>Ahmad S.</small>
+                        </div>
+                    </button>
+                    <button type="button" class="btn-quick-user quick-btn-user" data-user="user2" title="Masuk sebagai User 2 (Budi T.)">
+                        <span class="quick-icon">⚡</span>
+                        <div class="quick-info">
+                            <strong>User 2</strong>
+                            <small>Budi T.</small>
+                        </div>
+                    </button>
+                </div>
             </form>
         </div>
     </div>

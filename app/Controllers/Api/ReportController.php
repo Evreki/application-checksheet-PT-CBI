@@ -22,29 +22,34 @@ class ReportController extends BaseApiController
     public function index(): ResponseInterface
     {
         return $this->run(function () {
-            $instance = $this->request->getGet('instance');
-            $date     = $this->request->getGet('date');
+            try {
+                $instance = $this->request->getGet('instance');
+                $date     = $this->request->getGet('date');
 
-            $db = \Config\Database::connect();
-            $b  = $db->table('cs_reports r')
-                ->select('r.*, eq.instance_name, eq.building, eq.room_location, act.item_name as action_item_name')
-                ->join('cs_equipment_instances eq', 'eq.instance_code = r.instance_code', 'left')
-                ->join('cs_action_items act', 'act.id = r.action_item_id', 'left')
-                ->orderBy('r.id', 'DESC');
+                $db = \Config\Database::connect();
+                $b  = $db->table('cs_reports r')
+                    ->select('r.*, eq.instance_name, eq.building, eq.room_location, act.item_name as action_item_name')
+                    ->join('cs_equipment_instances eq', 'eq.instance_code = r.instance_code', 'left')
+                    ->join('cs_action_items act', 'act.id = r.action_item_id', 'left')
+                    ->orderBy('r.id', 'DESC');
 
-            if ($instance) {
-                $b->where('r.instance_code', $instance);
+                if ($instance) {
+                    $b->where('r.instance_code', $instance);
+                }
+                if ($date) {
+                    $b->where('r.report_date', $date);
+                }
+
+                $list = $b->get()->getResultArray();
+                foreach ($list as &$item) {
+                    $item['parts'] = $this->parts->where('report_id', $item['id'])->findAll();
+                }
+
+                return $list;
+            } catch (\Throwable $e) {
+                log_message('warning', 'DB reports error: ' . $e->getMessage());
+                return [];
             }
-            if ($date) {
-                $b->where('r.report_date', $date);
-            }
-
-            $list = $b->get()->getResultArray();
-            foreach ($list as &$item) {
-                $item['parts'] = $this->parts->where('report_id', $item['id'])->findAll();
-            }
-
-            return $list;
         });
     }
 

@@ -18,24 +18,29 @@ class ActionController extends BaseApiController
     public function index(): ResponseInterface
     {
         return $this->run(function () {
-            $type   = $this->request->getGet('type'); // 'TODAY' or 'BACKLOG'
-            $status = $this->request->getGet('status'); // 'OPEN', 'IN_PROGRESS', 'RESOLVED'
+            try {
+                $type   = $this->request->getGet('type'); // 'TODAY' or 'BACKLOG'
+                $status = $this->request->getGet('status'); // 'OPEN', 'IN_PROGRESS', 'RESOLVED'
 
-            $db = \Config\Database::connect();
-            $b  = $db->table('cs_action_items a')
-                ->select('a.*, u.full_name as assigned_user_name, eq.instance_name, eq.building, eq.room_location')
-                ->join('cs_users u', 'u.id = a.assigned_user_id', 'left')
-                ->join('cs_equipment_instances eq', 'eq.instance_code = a.instance_code', 'left')
-                ->orderBy('a.id', 'DESC');
+                $db = \Config\Database::connect();
+                $b  = $db->table('cs_action_items a')
+                    ->select('a.*, u.full_name as assigned_user_name, eq.instance_name, eq.building, eq.room_location')
+                    ->join('cs_users u', 'u.id = a.assigned_user_id', 'left')
+                    ->join('cs_equipment_instances eq', 'eq.instance_code = a.instance_code', 'left')
+                    ->orderBy('a.id', 'DESC');
 
-            if ($type && in_array(strtoupper($type), ['TODAY', 'BACKLOG'], true)) {
-                $b->where('a.action_type', strtoupper($type));
+                if ($type && in_array(strtoupper($type), ['TODAY', 'BACKLOG'], true)) {
+                    $b->where('a.action_type', strtoupper($type));
+                }
+                if ($status) {
+                    $b->where('a.status', strtoupper($status));
+                }
+
+                return $b->get()->getResultArray();
+            } catch (\Throwable $e) {
+                log_message('warning', 'DB actions error: ' . $e->getMessage());
+                return [];
             }
-            if ($status) {
-                $b->where('a.status', strtoupper($status));
-            }
-
-            return $b->get()->getResultArray();
         });
     }
 

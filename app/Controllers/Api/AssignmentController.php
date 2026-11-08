@@ -21,25 +21,30 @@ class AssignmentController extends BaseApiController
     public function index(): ResponseInterface
     {
         return $this->run(function () {
-            $date   = $this->request->getGet('date') ?? date('Y-m-d');
-            $userId = $this->request->getGet('user_id');
+            try {
+                $date   = $this->request->getGet('date') ?? date('Y-m-d');
+                $userId = $this->request->getGet('user_id');
 
-            $db = \Config\Database::connect();
-            $b  = $db->table('cs_assignments a')
-                ->select('a.*, u.full_name as assigned_to_name, l.full_name as assigned_by_name, eq.instance_name, eq.building, eq.room_location')
-                ->join('cs_users u', 'u.id = a.assigned_to_user_id', 'left')
-                ->join('cs_users l', 'l.id = a.assigned_by_user_id', 'left')
-                ->join('cs_equipment_instances eq', 'eq.instance_code = a.instance_code', 'left')
-                ->orderBy('a.id', 'DESC');
+                $db = \Config\Database::connect();
+                $b  = $db->table('cs_assignments a')
+                    ->select('a.*, u.full_name as assigned_to_name, l.full_name as assigned_by_name, eq.instance_name, eq.building, eq.room_location')
+                    ->join('cs_users u', 'u.id = a.assigned_to_user_id', 'left')
+                    ->join('cs_users l', 'l.id = a.assigned_by_user_id', 'left')
+                    ->join('cs_equipment_instances eq', 'eq.instance_code = a.instance_code', 'left')
+                    ->orderBy('a.id', 'DESC');
 
-            if ($date && $date !== 'all') {
-                $b->where('a.schedule_date', $date);
+                if ($date && $date !== 'all') {
+                    $b->where('a.schedule_date', $date);
+                }
+                if ($userId) {
+                    $b->where('a.assigned_to_user_id', (int) $userId);
+                }
+
+                return $b->get()->getResultArray();
+            } catch (\Throwable $e) {
+                log_message('warning', 'DB assignments error: ' . $e->getMessage());
+                return [];
             }
-            if ($userId) {
-                $b->where('a.assigned_to_user_id', (int) $userId);
-            }
-
-            return $b->get()->getResultArray();
         });
     }
 

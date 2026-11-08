@@ -18,18 +18,23 @@ class EquipmentInstanceController extends BaseApiController
     public function index(): ResponseInterface
     {
         return $this->run(function () {
-            $building = $this->request->getGet('building');
-            $group    = $this->request->getGet('group');
+            try {
+                $building = $this->request->getGet('building');
+                $group    = $this->request->getGet('group');
 
-            $q = $this->instances->where('is_active', 1)->orderBy('sort_order', 'ASC');
-            if ($building && $building !== 'all') {
-                $q->where('building', $building);
-            }
-            if ($group && $group !== 'all') {
-                $q->where('equipment_group', $group);
-            }
+                $q = $this->instances->where('is_active', 1)->orderBy('sort_order', 'ASC');
+                if ($building && $building !== 'all') {
+                    $q->where('building', $building);
+                }
+                if ($group && $group !== 'all') {
+                    $q->where('equipment_group', $group);
+                }
 
-            return $q->findAll();
+                return $q->findAll();
+            } catch (\Throwable $e) {
+                log_message('warning', 'DB instances error: ' . $e->getMessage());
+                return [];
+            }
         });
     }
 
