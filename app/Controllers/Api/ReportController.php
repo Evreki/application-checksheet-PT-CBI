@@ -56,13 +56,23 @@ class ReportController extends BaseApiController
                 'report_date'   => 'required|valid_date',
                 'pic_name'      => 'required',
                 'action_taken'  => 'required',
+                'room_location' => 'permit_empty',
             ]);
 
             $sessionUser = session()->get('user');
+            $instanceCode = trim($in['instance_code']);
+            $roomLocation = trim((string) ($in['room_location'] ?? ''));
+
+            if ($roomLocation !== '') {
+                $db = \Config\Database::connect();
+                $db->table('cs_equipment_instances')
+                    ->where('instance_code', $instanceCode)
+                    ->update(['room_location' => $roomLocation, 'updated_at' => date('Y-m-d H:i:s')]);
+            }
 
             $reportData = [
                 'action_item_id'     => ! empty($in['action_item_id']) ? (int) $in['action_item_id'] : null,
-                'instance_code'      => trim($in['instance_code']),
+                'instance_code'      => $instanceCode,
                 'report_date'        => $in['report_date'],
                 'shift'              => $in['shift'] ?? 'Shift 1',
                 'pic_name'           => trim($in['pic_name']),
@@ -125,4 +135,3 @@ class ReportController extends BaseApiController
         });
     }
 }
-

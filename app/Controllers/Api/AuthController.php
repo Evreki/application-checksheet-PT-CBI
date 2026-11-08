@@ -68,11 +68,15 @@ class AuthController extends BaseApiController
     public function users(): ResponseInterface
     {
         return $this->run(function () {
-            $list = $this->users->where('is_active', 1)
-                ->select('id, username, full_name, role, department, section')
-                ->findAll();
-            return $list;
+            $role = $this->request->getGet('role');
+            $q = $this->users->where('is_active', 1)
+                ->select('id, username, full_name, role, department, section');
+
+            if ($role) {
+                $q->where('role', $role);
+            }
+
+            return $q->findAll();
         });
     }
 }
-

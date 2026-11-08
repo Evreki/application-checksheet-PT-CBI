@@ -283,7 +283,7 @@
     <div style="display: flex; gap: 10px; align-items: center;">
       <span style="font-size: 12px; color: #64748b;">Standar A4 Corporate CBI</span>
       <button onclick="window.print()" class="btn btn-print">
-        🖨️ Unduh PDF / Cetak Laporan
+        Unduh PDF / Cetak Laporan
       </button>
     </div>
   </div>
@@ -350,6 +350,16 @@
           <span class="meta-label">PIC Pelaksana:</span>
           <span class="meta-val"><?= esc($report['pic_name']) ?></span>
         </div>
+        <?php if (! empty($assignment)): ?>
+        <div class="meta-row">
+          <span class="meta-label">Penugasan Leader:</span>
+          <span class="meta-val">
+            <?= esc($assignment['inspection_type'] === 'DAILY' ? 'Inspeksi Harian' : 'Inspeksi Bulanan') ?>
+            <?= ! empty($assignment['leader_name']) ? ' &bull; Oleh: ' . esc($assignment['leader_name']) : '' ?>
+            <?= ! empty($assignment['notes']) ? ' ("' . esc($assignment['notes']) . '")' : '' ?>
+          </span>
+        </div>
+        <?php endif; ?>
       </div>
     </div>
 

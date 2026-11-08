@@ -43,7 +43,10 @@ export const api = {
   login: (username, password) => call('POST', 'auth/login', { username, password }),
   me: () => call('GET', 'auth/me'),
   logout: () => call('POST', 'auth/logout'),
-  users: () => call('GET', 'auth/users'),
+  users: (role) => {
+    const qs = role ? `?role=${encodeURIComponent(role)}` : '';
+    return call('GET', `auth/users${qs}`);
+  },
 
   // Instances & Equipment
   instances: (building, group) => {
@@ -53,6 +56,7 @@ export const api = {
     const qs = q.length ? `?${q.join('&')}` : '';
     return call('GET', `instances${qs}`);
   },
+  updateInstanceLocation: (data) => call('POST', 'instances/location', data),
 
   // Assignments
   assignments: (date, userId) => {
@@ -76,6 +80,7 @@ export const api = {
   createAction: (data) => call('POST', 'actions', data),
   actionDecision: (id, data) => call('POST', `actions/${id}/decision`, data),
   updateActionStatus: (id, status) => call('POST', `actions/${id}/status`, { status }),
+  deleteAction: (id) => call('POST', `actions/${id}/delete`),
 
   // Reports
   reports: (instance, date) => {

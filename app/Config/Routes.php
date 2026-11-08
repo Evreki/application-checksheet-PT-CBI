@@ -19,6 +19,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
 
     // Multi-Instance Equipment
     $routes->get('instances', 'EquipmentInstanceController::index');
+    $routes->post('instances/location', 'EquipmentInstanceController::updateLocation');
 
     // Penugasan & Kalender
     $routes->get('assignments', 'AssignmentController::index');
@@ -30,6 +31,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
     $routes->post('actions', 'ActionController::create');
     $routes->post('actions/(:num)/decision', 'ActionController::decision/$1');
     $routes->post('actions/(:num)/status', 'ActionController::updateStatus/$1');
+    $routes->post('actions/(:num)/delete', 'ActionController::delete/$1');
 
     // Sidebar Reporting & Sparepart
     $routes->get('reports', 'ReportController::index');

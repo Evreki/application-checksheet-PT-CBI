@@ -21,7 +21,7 @@ const ui = {
   filter: 'all',
   search: '',
   statusFilter: 'all',
-  actionTab: 'TODAY',
+  actionTab: 'ALL',
   currentActionCount: 0,
 };
 let S = null;
@@ -47,8 +47,12 @@ function updateActorUI(name) {
   const isLeader = (u?.role || 'user').toLowerCase() === 'leader';
   const assignBtn = $('#btn-open-assignment');
   const tasksBtn = $('#btn-user-tasks');
+  const locBtn = $('#btn-open-locations');
   if (assignBtn) {
     assignBtn.style.display = isLeader ? 'inline-flex' : 'none';
+  }
+  if (locBtn) {
+    locBtn.style.display = isLeader ? 'inline-flex' : 'none';
   }
   if (tasksBtn) {
     tasksBtn.style.display = !isLeader ? 'inline-flex' : 'none';
@@ -177,7 +181,7 @@ function closePop() {
   if (ui.dirty && !typing()) render();
 }
 
-function openPop(td) {
+function openPop(td, initialSymbol = null) {
   const item = itemById(td.dataset.item);
   const day = Number(td.dataset.day);
   if (!item || item.calc) return;
@@ -185,15 +189,36 @@ function openPop(td) {
   if (dayLocked(day)) { toast(S.sheet.finalized ? 'Lembar sudah final (dikunci).' : `Hari ke-${day} sudah di-approve dan dikunci.`, 'err'); return; }
 
   const e = S.entries[item.id]?.[day] || {};
-  pop = { item, day, symbol: e.symbol || null };
+  const activeSym = initialSymbol || e.symbol || null;
+  pop = { item, day, symbol: activeSym, action_type: 'TODAY' };
   const el = $('#pop');
   const lim = [item.min !== null ? `min ${fmtNum(item.min)}` : '', item.max !== null ? `max ${fmtNum(item.max)}` : ''].filter(Boolean).join(' • ');
+  const isNg = activeSym === 'X';
+
   el.innerHTML = `
     <h4>${esc(item.part)} — tgl ${day}<small>Standar: ${esc(item.standard || '-')}${lim ? ` (${lim})` : ''}</small></h4>
-    <div class="syms">${SYMBOLS.map((s) => `<button data-sym="${s.code}" class="${s.code}${e.symbol === s.code ? ' on' : ''}" title="${s.label} [${s.key.toUpperCase()}]">${glyph(s.code)}<small>${s.key.toUpperCase()}</small></button>`).join('')}</div>
+    <div class="syms">${SYMBOLS.map((s) => `<button data-sym="${s.code}" class="${s.code}${activeSym === s.code ? ' on' : ''}" title="${s.label} [${s.key.toUpperCase()}]">${glyph(s.code)}<small>${s.key.toUpperCase()}</small></button>`).join('')}</div>
     ${item.accepts_value ? `<label>Nilai ukur${item.unit ? ` (${esc(item.unit)})` : ''}</label><input type="text" inputmode="decimal" id="p-val" value="${esc(fmtNum(e.value ?? null))}" autocomplete="off"><div class="warn" id="p-warn"></div>` : ''}
-    <label>Catatan sel (opsional)</label><input type="text" id="p-note" list="p-hints" maxlength="500" value="${esc(e.note || '')}" autocomplete="off">
+    <label id="p-note-label">${isNg ? '<span style="color:#dc2626;font-weight:700">Keterangan Masalah / Kerusakan (NG) *:</span>' : 'Catatan sel (opsional)'}</label>
+    <input type="text" id="p-note" list="p-hints" maxlength="500" value="${esc(e.note || '')}" placeholder="${isNg ? 'Wajib isi: jelaskan masalah/kerusakan yang ditemukan...' : ''}" autocomplete="off">
     <datalist id="p-hints">${(S.template.hints || []).map((h) => `<option value="${esc(h)}">`).join('')}</datalist>
+    <div id="p-ng-action-box" style="display:${isNg ? 'block' : 'none'};margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;">
+      <label style="font-weight:700;font-size:11px;color:#1e293b;margin-bottom:5px;display:block;">Tindak Lanjut Penanganan (NG):</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+        <button type="button" id="btn-choice-today" class="btn-ng-choice active" style="font-size:11px;padding:6px 4px;border:1.5px solid #dc2626;background:#fee2e2;color:#991b1b;border-radius:6px;font-weight:700;cursor:pointer;">
+          Action Today
+        </button>
+        <button type="button" id="btn-choice-backlog" class="btn-ng-choice" style="font-size:11px;padding:6px 4px;border:1.5px solid #cbd5e1;background:#f8fafc;color:#64748b;border-radius:6px;font-weight:700;cursor:pointer;">
+          Action Backlog
+        </button>
+      </div>
+      <div id="p-backlog-date-wrap" style="display:none;margin-top:4px;">
+        <label style="font-size:10.5px;color:#64748b;margin:0 0 2px;display:block;">Target Tanggal Backlog:</label>
+        <input type="date" id="p-backlog-date" value="${new Date(Date.now() + 86400000).toISOString().slice(0, 10)}" style="font-size:11.5px;padding:4px 6px;">
+        <label style="font-size:10.5px;color:#64748b;margin:4px 0 2px;display:block;">Alasan Dijadwalkan (Backlog):</label>
+        <input type="text" id="p-backlog-notes" placeholder="Misal: Menunggu sparepart, vendor, dsb." style="font-size:11.5px;padding:4px 6px;width:100%;box-sizing:border-box;">
+      </div>
+    </div>
     <div class="row"><button class="btn pri" id="p-save">Simpan</button><button class="btn" id="p-clear">Kosongkan</button><button class="btn ghost" id="p-close">Tutup</button></div>`;
   el.hidden = false;
 
@@ -201,7 +226,15 @@ function openPop(td) {
   const w = 290, h = el.offsetHeight;
   el.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
   el.style.top = `${r.bottom + h + 12 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 6}px`;
-  (item.accepts_value ? $('#p-val') : $('.syms button.on') || $('.syms button'))?.focus();
+
+  if (isNg) {
+    $('#p-note')?.focus();
+  } else if (item.accepts_value) {
+    $('#p-val')?.focus();
+  } else {
+    ($('.syms button.on') || $('.syms button'))?.focus();
+  }
+
   if (item.accepts_value) { $('#p-val').addEventListener('input', checkLimit); checkLimit(); }
 }
 
@@ -211,28 +244,61 @@ function checkLimit() {
   const v = parseNum($('#p-val')?.value);
   const w = $('#p-warn');
   if (!w) return;
-  w.textContent = Number.isNaN(v) ? 'Nilai harus berupa angka.' : outOfLimit(pop.item, v) ? '⚠ Di luar batas standar — disarankan simbol X.' : '';
+  const out = !Number.isNaN(v) && outOfLimit(pop.item, v);
+  w.textContent = Number.isNaN(v) ? 'Nilai harus berupa angka.' : out ? 'Di luar batas standar — periksa kondisi mesin!' : '';
+  if (out) {
+    const lbl = $('#p-note-label');
+    if (lbl) lbl.innerHTML = '<span style="color:#dc2626;font-weight:700">Keterangan Masalah / Kerusakan (NG) *:</span>';
+    const inp = $('#p-note');
+    if (inp && !inp.placeholder) inp.placeholder = 'Jelaskan kondisi abnormal / alasan nilai di luar batas...';
+    const ngBox = $('#p-ng-action-box');
+    if (ngBox) ngBox.style.display = 'block';
+  }
 }
 
 async function commitPop(symbol) {
   const { item, day } = pop;
   const value = item.accepts_value ? parseNum($('#p-val').value) : null;
   if (Number.isNaN(value)) { toast('Nilai ukur harus berupa angka.', 'err'); return; }
-  const note = $('#p-note').value;
+  const note = ($('#p-note')?.value || '').trim();
   if (symbol === undefined) symbol = pop.symbol;
   if (symbol === null && value !== null) symbol = outOfLimit(item, value) ? 'X' : 'V';
+
+  // Validasi: Jika simbol NG (X), teknisi wajib mengisi keterangan kerusakan (tidak disimpulkan otomatis)
+  if (symbol === 'X' && !note) {
+    toast('Mohon isi keterangan kerusakan/masalah NG pada input catatan.', 'warn');
+    const lbl = $('#p-note-label');
+    if (lbl) lbl.innerHTML = '<span style="color:#dc2626;font-weight:700">Keterangan Masalah / Kerusakan (NG) *:</span>';
+    const inp = $('#p-note');
+    if (inp) {
+      inp.placeholder = 'Wajib diisi: jelaskan apa yang rusak/abnormal...';
+      inp.focus();
+    }
+    const ngBox = $('#p-ng-action-box');
+    if (ngBox) ngBox.style.display = 'block';
+    return;
+  }
+
+  const actType = pop?.action_type || 'TODAY';
+  const schedDate = actType === 'BACKLOG' ? ($('#p-backlog-date')?.value || new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10);
+  const bNotes = actType === 'BACKLOG' ? ($('#p-backlog-notes')?.value?.trim() || null) : null;
+
   $('#pop').hidden = true; pop = null;
 
-  // Auto-registrasi ke Action Sidebar bila ada temuan Not Good (NG = X)
-  if (symbol === 'X') {
+  // Catat temuan ke Action Sidebar MURNI dari apa yang diisi oleh teknisi
+  if (symbol === 'X' && note) {
+    const ngDesc = value !== null ? `${note} (Nilai Ukur: ${value} ${item.unit || ''})` : note;
+    const curInst = localStorage.getItem('cs_unit_code') || S?.sheet?.equipment_no || S?.template?.code;
     api.createAction({
       sheet_id: S?.sheet?.id,
-      instance_code: S?.sheet?.equipment_no || S?.template?.code,
+      instance_code: curInst,
       item_name: item.part,
-      ng_description: note ? `${note} (Nilai: ${value ?? '-'})` : `Kondisi NG pada item ${item.part} tanggal ${day}. Standar: ${item.standard || '-'}`,
-      action_type: 'TODAY',
+      ng_description: ngDesc,
+      action_type: actType,
+      scheduled_date: schedDate,
+      backlog_notes: bNotes,
     }).then(() => {
-      toast('Temuan NG otomatis dicatat ke daftar Action (Tindakan) ⚡', 'ok');
+      toast(actType === 'BACKLOG' ? 'Temuan NG dicatat ke Action Backlog (Dijadwalkan).' : 'Temuan NG dicatat ke Action Today.', 'ok');
       loadActionCounts();
     }).catch(() => {});
   }
@@ -245,16 +311,13 @@ async function quickSet(item, day, symbol) {
   if (dayLocked(day)) { toast('Hari ini sudah dikunci.', 'err'); return; }
 
   if (symbol === 'X') {
-    api.createAction({
-      sheet_id: S?.sheet?.id,
-      instance_code: S?.sheet?.equipment_no || S?.template?.code,
-      item_name: item.part,
-      ng_description: `Kondisi abnormal (NG) pada item ${item.part} tanggal ${day}. Standar: ${item.standard || '-'}`,
-      action_type: 'TODAY',
-    }).then(() => {
-      toast('Temuan NG dicatat ke daftar Action (Tindakan) ⚡', 'ok');
-      loadActionCounts();
-    }).catch(() => {});
+    // Jangan menyimpulkan otomatis! Buka popover agar teknisi menginput detail kerusakan
+    const td = $(`td.day[data-item="${item.id}"][data-day="${day}"]`);
+    if (td) {
+      openPop(td, 'X');
+      toast('Silakan isi keterangan kerusakan/alasan NG.', 'info');
+      return;
+    }
   }
 
   const ok = await mutate(() => api.entry(S.sheet.id, { item_id: item.id, day, symbol, value: e.value ?? null, note: e.note ?? '' }));
@@ -295,7 +358,7 @@ function openApprovalDlg({ scope, refNo, role, title }) {
     setActor(actor_name);
     updateActorUI(actor_name);
     d.close();
-    await mutate(() => api.approve(S.sheet.id, { scope, ref_no: refNo, role, status: 'OK', note: $('#a-note').value, actor_name }), 'Approval berhasil disimpan ✔');
+    await mutate(() => api.approve(S.sheet.id, { scope, ref_no: refNo, role, status: 'OK', note: $('#a-note').value, actor_name }), 'Approval berhasil disimpan.');
   };
   if ($('#a-revoke')) {
     $('#a-revoke').onclick = async () => {
@@ -348,7 +411,7 @@ sheetEl.addEventListener('click', (e) => {
     dlg.querySelectorAll('button[data-sym]').forEach((btn) => {
       btn.onclick = async () => {
         dlg.close();
-        await mutate(() => api.fillDay(S.sheet.id, d, btn.dataset.sym), `Hari ke-${d} berhasil diisi ✔`);
+        await mutate(() => api.fillDay(S.sheet.id, d, btn.dataset.sym), `Hari ke-${d} berhasil diisi.`);
       };
     });
     $('#f-cancel').onclick = () => dlg.close();
@@ -391,7 +454,68 @@ sheetEl.addEventListener('keydown', (e) => {
 $('#pop').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;
-  if (b.dataset.sym !== undefined) { commitPop(b.dataset.sym); return; }
+
+  if (b.id === 'btn-choice-today') {
+    if (pop) pop.action_type = 'TODAY';
+    b.style.borderColor = '#dc2626';
+    b.style.background = '#fee2e2';
+    b.style.color = '#991b1b';
+    const b2 = $('#btn-choice-backlog');
+    if (b2) {
+      b2.style.borderColor = '#cbd5e1';
+      b2.style.background = '#f8fafc';
+      b2.style.color = '#64748b';
+    }
+    const wrap = $('#p-backlog-date-wrap');
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+
+  if (b.id === 'btn-choice-backlog') {
+    if (pop) pop.action_type = 'BACKLOG';
+    b.style.borderColor = '#d97706';
+    b.style.background = '#fef3c7';
+    b.style.color = '#92400e';
+    const b1 = $('#btn-choice-today');
+    if (b1) {
+      b1.style.borderColor = '#cbd5e1';
+      b1.style.background = '#f8fafc';
+      b1.style.color = '#64748b';
+    }
+    const wrap = $('#p-backlog-date-wrap');
+    if (wrap) wrap.style.display = 'block';
+    return;
+  }
+
+  if (b.dataset.sym !== undefined) {
+    const sym = b.dataset.sym;
+    pop.symbol = sym;
+    $('#pop').querySelectorAll('.syms button').forEach((btn) => btn.classList.toggle('on', btn.dataset.sym === sym));
+
+    if (sym === 'X') {
+      // Jika teknisi klik X, jangan langsung simpan dan jangan simpulkan otomatis!
+      // Arahkan teknisi mengisi sendiri keterangan kerusakannya di input catatan
+      const lbl = $('#p-note-label');
+      if (lbl) lbl.innerHTML = '<span style="color:#dc2626;font-weight:700">Keterangan Masalah / Kerusakan (NG) *:</span>';
+      const inp = $('#p-note');
+      if (inp) {
+        inp.placeholder = 'Wajib isi: jelaskan masalah/kerusakan yang ditemukan...';
+        inp.focus();
+      }
+      const ngBox = $('#p-ng-action-box');
+      if (ngBox) ngBox.style.display = 'block';
+      return;
+    } else {
+      const lbl = $('#p-note-label');
+      if (lbl) lbl.textContent = 'Catatan sel (opsional)';
+      const inp = $('#p-note');
+      if (inp) inp.placeholder = '';
+      const ngBox = $('#p-ng-action-box');
+      if (ngBox) ngBox.style.display = 'none';
+      commitPop(sym);
+      return;
+    }
+  }
   if (b.id === 'p-save') { commitPop(); return; }
   if (b.id === 'p-clear') { commitPop(null); return; }
   if (b.id === 'p-close') { closePop(); return; }
@@ -418,6 +542,26 @@ function showLogin() {
   ui.view = 'login';
 }
 
+async function syncInstances() {
+  try {
+    const list = await api.instances();
+    if (Array.isArray(list) && list.length > 0) {
+      list.forEach((inst) => {
+        EQUIPMENT_CATALOG.forEach((eq) => {
+          const u = eq.units.find((x) => x.code === inst.instance_code);
+          if (u) {
+            if (inst.building) u.building = inst.building;
+            u.location = (inst.room_location && inst.room_location.trim() !== '') ? inst.room_location.trim() : '-';
+          }
+        });
+      });
+      renderEquipGrid();
+    }
+  } catch (err) {
+    console.warn('Gagal sinkronisasi data unit mesin:', err);
+  }
+}
+
 function showPortal() {
   const login = $('#login-view');
   const ws = $('#workstation-view');
@@ -436,6 +580,7 @@ function showPortal() {
   hideActiveTaskBanner();
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   updatePortalKPIs();
+  syncInstances();
   loadActionCounts();
   loadUserTasks(false);
 }
@@ -615,14 +760,14 @@ const EQUIPMENT_CATALOG = [
     badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
     desc: 'Pengering udara tekan sistem refrigerasi Friulair ACT80. Pengawasan suhu kerja (70-100°C), dew point, dan filter cartridge.',
     units: [
-      { code: 'AD-001', building: 'Gedung A', location: 'Ruang Kompresor Utama Gedung A' },
-      { code: 'AD-002', building: 'Gedung B', location: 'Sub-Station Assembly Gedung B' },
-      { code: 'AD-003', building: 'Gedung C', location: 'Area Wet Charging Gedung C' }
+      { code: 'AD-001', building: 'Gedung A', location: '-' },
+      { code: 'AD-002', building: 'Gedung B', location: '-' },
+      { code: 'AD-003', building: 'Gedung C', location: '-' }
     ],
-    scheduleItems: ['Daily & Weekly (Harian)', 'Overhaul & Berkala', 'Standard Preventive Master'],
+    scheduleItems: ['Daily & Weekly (Harian)', 'Bulanan & Berkala', 'Standard Preventive Master'],
     forms: [
       { code: 'AD_D', title: 'Harian & Mingguan (Daily & Weekly)', sub: 'Indikator Power, Dew Point, Suhu Kerja, Kompresor, Fan, Filter FTX/FTS', period: 'Harian & Mingguan', formNo: 'Form-PLS-MTC-D08', section: 'Utility' },
-      { code: 'AD_M', title: 'Overhaul & Berkala (Form D09)', sub: 'Pre/After Filter Replacement, Tekanan Freon, Dry & Wet Cleaning Kondenser', period: '1-6 Bulan', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
+      { code: 'AD_M', title: 'Bulanan & Berkala (Form D09)', sub: 'Pre/After Filter Replacement, Tekanan Freon, Dry & Wet Cleaning Kondenser', period: 'Bulanan & Berkala', formNo: 'Form-PLS-MTC-D09', section: 'Utility' },
       { code: 'AD_S', title: 'Standard Preventive Machine (STD)', sub: 'Master SOP perawatan, standar parameter operasi, instruksi kerja Form-PLS-MTC-D04', period: 'Standar Acuan', formNo: 'Form-PLS-MTC-D04', section: 'Maintenance' },
     ]
   },
@@ -646,9 +791,9 @@ const EQUIPMENT_CATALOG = [
     badgeStatus: { text: '3 Form Tersedia', bg: '#dcfce7', color: '#15803d' },
     desc: 'Sistem pendingin sentral utama pabrik CBI. Dilengkapi checklist harian, mingguan, serta inspeksi berkala.',
     units: [
-      { code: 'CH-001', building: 'Gedung A', location: 'Chiller Plant Ruang Utama Gedung A' },
-      { code: 'CH-002', building: 'Gedung B', location: 'Sub Chiller Plant Gedung B' },
-      { code: 'CH-003', building: 'Gedung C', location: 'Ruang Chiller Standby Gedung C' }
+      { code: 'CH-001', building: 'Gedung A', location: '-' },
+      { code: 'CH-002', building: 'Gedung B', location: '-' },
+      { code: 'CH-003', building: 'Gedung C', location: '-' }
     ],
     scheduleItems: ['Harian & Mingguan', 'Bulanan & Berkala', 'Standard Preventive Master'],
     forms: [
@@ -677,7 +822,7 @@ const EQUIPMENT_CATALOG = [
     badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Monitoring sirkulasi air pendingin, temperatur inlet/outlet, motor fan, dan level basin.',
     units: [
-      { code: 'CT-001', building: 'Gedung A', location: 'Rooftop Utility Gedung A' }
+      { code: 'CT-001', building: 'Gedung A', location: '-' }
     ],
     scheduleItems: ['Checksheet Harian (Daily)'],
     forms: [
@@ -704,7 +849,7 @@ const EQUIPMENT_CATALOG = [
     badgeStatus: { text: '1 Form Aktif', bg: '#fef3c7', color: '#92400e' },
     desc: 'Pengawasan sistem penetral emisi udara, pH air sirkulasi, nozzle spray, dan fan blower.',
     units: [
-      { code: 'SCR-001', building: 'Gedung A', location: 'Exhaust Area Outdoor Gedung A' }
+      { code: 'SCR-001', building: 'Gedung A', location: '-' }
     ],
     scheduleItems: ['Checksheet Harian (Daily)'],
     forms: [
@@ -750,7 +895,7 @@ function openFormSelectorDialog(eq, preselectedUnitCode = null) {
         <div class="fsd-unit-card ${u.code === currentUnit.code ? 'active' : ''}" data-code="${esc(u.code)}" role="button" tabindex="0">
           <div class="code">${esc(u.code)}</div>
           <div class="bld">${esc(u.building)}</div>
-          <small style="font-size:10px;color:#94a3b8;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(u.location)}</small>
+          <small style="font-size:10px;color:#94a3b8;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.location && u.location !== '-' ? esc(u.location) : ''}</small>
         </div>
       `).join('');
 
@@ -916,9 +1061,9 @@ function renderEquipGrid() {
           </div>
           <div class="card-unit-chips-wrap">
             ${eq.units.map((u) => `
-              <span class="unit-chip-tag" title="${esc(u.location)}">
+              <span class="unit-chip-tag" title="${u.location && u.location !== '-' ? esc(u.location) : ''}">
                 <span class="dot"></span>
-                <strong>${esc(u.code)}</strong> &bull; ${esc(u.building)}
+                <strong>${esc(u.code)}</strong> &bull; ${esc(u.building)}${u.location && u.location !== '-' ? ' (' + esc(u.location) + ')' : ''}
               </span>
             `).join('')}
           </div>
@@ -1002,16 +1147,28 @@ function renderEquipGrid() {
 // ------------------------------------------------------------------ SIDEBAR 1: ACTION ITEMS (NG MANAGEMENT)
 async function loadActionCounts() {
   try {
-    const todayItems = await api.actions('TODAY');
-    const backlogItems = await api.actions('BACKLOG');
-    const todayCount = (todayItems || []).filter((i) => i.status !== 'RESOLVED').length;
-    const backlogCount = (backlogItems || []).filter((i) => i.status !== 'RESOLVED').length;
+    const allItems = await api.actions('ALL');
+    const todayItems = (allItems || []).filter((i) => i.action_type === 'TODAY');
+    const backlogItems = (allItems || []).filter((i) => i.action_type === 'BACKLOG');
+    const todayCount = todayItems.filter((i) => i.status !== 'RESOLVED').length;
+    const backlogCount = backlogItems.filter((i) => i.status !== 'RESOLVED').length;
+    const allCount = (allItems || []).filter((i) => i.status !== 'RESOLVED').length;
 
-    if ($('#action-badge-count')) $('#action-badge-count').textContent = todayCount + backlogCount;
+    const actionBadge = $('#action-badge-count');
+    if (actionBadge) {
+      if (allCount > 0) {
+        actionBadge.textContent = allCount;
+        actionBadge.style.display = 'inline-flex';
+      } else {
+        actionBadge.textContent = '';
+        actionBadge.style.display = 'none';
+      }
+    }
+    if ($('#count-action-all')) $('#count-action-all').textContent = allCount;
     if ($('#count-action-today')) $('#count-action-today').textContent = todayCount;
     if ($('#count-action-backlog')) $('#count-action-backlog').textContent = backlogCount;
-    if ($('#kpi-action-today')) $('#kpi-action-today').textContent = todayCount;
-    if ($('#kpi-action-backlog')) $('#kpi-action-backlog').textContent = backlogCount;
+    if ($('#kpi-action-today')) $('#kpi-action-today').textContent = `${todayCount} Item`;
+    if ($('#kpi-action-backlog')) $('#kpi-action-backlog').textContent = `${backlogCount} Item`;
   } catch {}
 }
 
@@ -1028,8 +1185,8 @@ async function renderActionItems() {
     if (!items || !items.length) {
       container.innerHTML = `
         <div style="text-align:center;padding:40px 10px;color:#94a3b8;font-size:12.5px;">
-          <div style="font-size:28px;margin-bottom:8px;">✅</div>
-          <div style="font-weight:700;color:#334155;">Tidak Ada Tindakan ${ui.actionTab === 'TODAY' ? 'Hari Ini' : 'Backlog'}</div>
+          
+          <div style="font-weight:700;color:#334155;">Tidak Ada Tindakan ${ui.actionTab === 'TODAY' ? 'Hari Ini' : ui.actionTab === 'BACKLOG' ? 'Backlog' : 'Tercatat'}</div>
           <p style="margin:4px 0 0;font-size:11.5px;">Semua peralatan dalam kondisi optimal atau sudah diselesaikan.</p>
         </div>
       `;
@@ -1046,28 +1203,37 @@ async function renderActionItems() {
         </div>
         <h4>${esc(it.item_name)}</h4>
         <p>${esc(it.ng_description)}</p>
+        ${it.backlog_notes ? `
+          <div class="action-backlog-notes" style="margin:8px 0 6px;padding:6px 10px;background:#fef3c7;border-left:3px solid #d97706;border-radius:4px;font-size:11.5px;color:#92400e;line-height:1.4;">
+            <strong style="color:#78350f;">Alasan Dijadwalkan:</strong> ${esc(it.backlog_notes)}
+          </div>
+        ` : ''}
         
         <div class="action-card-footer">
           <div>
-            <span>📍 ${esc(it.building || '-')}</span>
-            ${it.scheduled_date ? `<span style="margin-left:6px;">📅 ${esc(it.scheduled_date)}</span>` : ''}
+            <span>${esc(it.building || '-')}</span>
+            ${it.scheduled_date ? `<span style="margin-left:6px;font-weight:600;color:${it.action_type === 'BACKLOG' ? '#b45309' : '#64748b'};">${it.action_type === 'BACKLOG' ? 'Target: ' : ''}${esc(it.scheduled_date)}</span>` : ''}
           </div>
           <div class="action-btn-group">
-            ${isLeader ? `
-              ${it.action_type === 'TODAY' ? `
-                <button type="button" class="btn-card-action btn-switch btn-make-backlog" data-id="${it.id}" data-item="${esc(it.item_name)}" data-inst="${esc(it.instance_code)}">
-                  📅 Ke Backlog
-                </button>
-              ` : `
-                <button type="button" class="btn-card-action btn-switch btn-make-today" data-id="${it.id}">
-                  ⚡ Ke Today
-                </button>
-              `}
-            ` : ''}
+            ${it.action_type === 'TODAY' ? `
+              <button type="button" class="btn-card-action btn-switch btn-make-backlog" data-id="${it.id}" data-item="${esc(it.item_name)}" data-inst="${esc(it.instance_code)}">
+                Jadwalkan Backlog
+              </button>
+            ` : `
+              <button type="button" class="btn-card-action btn-switch btn-make-today" data-id="${it.id}">
+                Pindahkan ke Today
+              </button>
+            `}
 
             ${it.status !== 'RESOLVED' ? `
               <button type="button" class="btn-card-action btn-resolve btn-action-report" data-id="${it.id}" data-inst="${esc(it.instance_code)}" data-item="${esc(it.item_name)}">
-                ✍️ Kerjakan &amp; Buat Laporan
+                Kerjakan &amp; Buat Laporan
+              </button>
+            ` : ''}
+
+            ${isLeader ? `
+              <button type="button" class="btn-card-action btn-delete-action" data-id="${it.id}" data-item="${esc(it.item_name)}" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;" title="Hilangkan temuan ini dari daftar (Khusus Leader)">
+                Hilangkan
               </button>
             ` : ''}
           </div>
@@ -1086,7 +1252,7 @@ async function renderActionItems() {
       btn.onclick = async () => {
         const id = btn.dataset.id;
         await api.actionDecision(id, { action_type: 'TODAY', scheduled_date: new Date().toISOString().slice(0, 10) });
-        toast('Item dipindahkan ke Action Today 🔴', 'ok');
+        toast('Item dipindahkan ke Action Today.', 'ok');
         loadActionCounts();
         renderActionItems();
       };
@@ -1100,6 +1266,20 @@ async function renderActionItems() {
         if ($('#rep-instance')) $('#rep-instance').value = btn.dataset.inst;
         if ($('#rep-action')) $('#rep-action').value = `Perbaikan dan verifikasi temuan abnormal pada item: ${btn.dataset.item}. `;
         $('#form-report').dataset.actionItemId = btn.dataset.id;
+      };
+    });
+
+    container.querySelectorAll('.btn-delete-action').forEach((btn) => {
+      btn.onclick = async () => {
+        if (!confirm(`Apakah Leader yakin ingin menghilangkan temuan "${btn.dataset.item}" dari daftar tindakan?`)) return;
+        try {
+          await api.deleteAction(btn.dataset.id);
+          toast('Temuan berhasil dihilangkan oleh Leader.', 'ok');
+          loadActionCounts();
+          renderActionItems();
+        } catch (err) {
+          toast(err.message, 'err');
+        }
       };
     });
   } catch (err) {
@@ -1149,7 +1329,7 @@ async function loadUserTasks(showNotificationToast = false) {
     }
 
     if (showNotificationToast && pendingTasks.length > 0) {
-      toast(`🔔 Anda memiliki ${pendingTasks.length} tugas inspeksi dari Leader.`, 'ok');
+      toast(`Anda memiliki ${pendingTasks.length} tugas inspeksi dari Leader.`, 'ok');
     }
   } catch {}
 }
@@ -1174,14 +1354,14 @@ async function renderLeaderMonitoring() {
           <div class="assign-card-hdr">
             <span class="assign-card-title">${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}</span>
             <span class="assign-status-badge ${isDone ? 'completed' : 'pending'}">
-              ${isDone ? '✔ Selesai' : '⏳ Belum Dikerjakan'}
+              ${isDone ? 'Selesai' : 'Belum Dikerjakan'}
             </span>
           </div>
           <div class="assign-card-meta">
-            <span>📍 ${esc(a.building || '-')} (${esc(a.room_location || '-')})</span>
-            <span>📅 Target: <b>${esc(a.schedule_date)}</b></span>
+            <span>${esc(a.building || '-')} (${esc(a.room_location || '-')})</span>
+            <span>Target: <b>${esc(a.schedule_date)}</b></span>
             <span>⏱ Jenis: <b>${isDaily ? 'Harian (Daily)' : 'Bulanan (Monthly)'}</b></span>
-            <span>👤 Teknisi: <b>${esc(a.assigned_to_name || 'Teknisi')}</b></span>
+            <span>Teknisi: <b>${esc(a.assigned_to_name || 'Teknisi')}</b></span>
           </div>
           ${a.notes ? `<div class="assign-card-notes"><strong>Instruksi Leader:</strong> "${esc(a.notes)}"</div>` : ''}
         </div>
@@ -1212,7 +1392,7 @@ function renderUserTasksList(tab = 'pending') {
   if (!currentList.length) {
     body.innerHTML = `
       <div style="text-align:center;padding:40px 16px;color:#64748b;">
-        <div style="font-size:32px;margin-bottom:10px;">${tab === 'pending' ? '🎉' : '📂'}</div>
+        
         <h4 style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 6px;">
           ${tab === 'pending' ? 'Semua Penugasan Selesai!' : 'Belum Ada Riwayat Tugas Selesai'}
         </h4>
@@ -1243,10 +1423,10 @@ function renderUserTasksList(tab = 'pending') {
       <div class="task-item-card">
         <div class="task-item-header">
           <span class="task-badge-type ${isDaily ? '' : 'monthly'}">
-            ${isDaily ? '📅 Inspeksi Harian (Daily)' : '📅 Inspeksi Bulanan (Monthly)'}
+            ${isDaily ? 'Inspeksi Harian (Daily)' : 'Inspeksi Bulanan (Monthly)'}
           </span>
           <span style="font-size:11px;font-weight:700;color:${isDone ? '#15803d' : '#d97706'}">
-            ${isDone ? '✔ SELESAI' : '⏳ PENDING'}
+            ${isDone ? 'SELESAI' : 'PENDING'}
           </span>
         </div>
 
@@ -1254,7 +1434,7 @@ function renderUserTasksList(tab = 'pending') {
           ${esc(a.instance_code)} &bull; ${esc(a.instance_name || 'Unit Mesin')}
         </div>
         <div class="task-item-loc">
-          📍 ${esc(a.building || '-')} &bull; ${esc(a.room_location || '-')}
+          ${esc(a.building || '-')} &bull; ${esc(a.room_location || '-')}
         </div>
 
         ${a.notes ? `
@@ -1270,13 +1450,13 @@ function renderUserTasksList(tab = 'pending') {
           <div style="display:flex;gap:6px;align-items:center;">
             ${!isDone ? `
               <button type="button" class="btn-submit-report btn-start-task" data-id="${a.id}" data-tpl="${targetTpl}" data-inst="${esc(a.instance_code)}" data-name="${esc(a.instance_name || '')}" data-bld="${esc(a.building || '')}" data-loc="${esc(a.room_location || '')}" data-notes="${esc(a.notes || '')}" data-type="${isDaily ? 'Harian (Daily)' : 'Bulanan (Monthly)'}" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:#2563eb;">
-                ▶ Mulai Inspeksi
+                Mulai Inspeksi
               </button>
               <button type="button" class="btn-submit-report btn-mark-complete-task" data-id="${a.id}" data-inst="${esc(a.instance_code)}" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:#16a34a;">
-                ✔ Tandai Selesai
+                Tandai Selesai
               </button>
             ` : `
-              <span style="color:#15803d;font-size:12px;font-weight:700;">✔ Selesai Diperiksa</span>
+              <span style="color:#15803d;font-size:12px;font-weight:700;">Selesai Diperiksa</span>
             `}
           </div>
         </div>
@@ -1306,7 +1486,7 @@ function renderUserTasksList(tab = 'pending') {
       $('#dlg-user-tasks')?.close();
       await showWorkstation(tpl);
       showActiveTaskBanner(activeTask);
-      toast(`Membuka checksheet untuk unit ${inst} 🚀`, 'ok');
+      toast(`Membuka checksheet untuk unit ${inst}.`, 'ok');
     };
   });
 
@@ -1316,7 +1496,7 @@ function renderUserTasksList(tab = 'pending') {
       const inst = btn.dataset.inst;
       try {
         await api.updateAssignmentStatus(taskId, 'COMPLETED');
-        toast(`✔ Tugas inspeksi ${inst} berhasil diselesaikan!`, 'ok');
+        toast(`Tugas inspeksi ${inst} berhasil diselesaikan.`, 'ok');
         // Update local state
         const item = cachedUserAssignments.find((x) => String(x.id) === String(taskId));
         if (item) item.status = 'COMPLETED';
@@ -1369,9 +1549,10 @@ function closeActionSidebar() {
 function populateInstanceSelect(selectId) {
   const sel = $(selectId);
   if (!sel) return;
-  sel.innerHTML = getAllInstances().map((i) => `
-    <option value="${esc(i.code)}">${esc(i.code)} &bull; ${esc(i.machineType)} (${esc(i.building)})</option>
-  `).join('');
+  sel.innerHTML = getAllInstances().map((i) => {
+    const locText = (i.location && i.location !== '-') ? ` - ${i.location}` : '';
+    return `<option value="${esc(i.code)}">${esc(i.code)} &bull; ${esc(i.machineType)} (${esc(i.building)}${esc(locText)})</option>`;
+  }).join('');
 }
 
 function openReportingSidebar() {
@@ -1381,6 +1562,33 @@ function openReportingSidebar() {
   if ($('#rep-date')) $('#rep-date').value = new Date().toISOString().slice(0, 10);
   const u = getCurrentUser();
   if ($('#rep-pic')) $('#rep-pic').value = u ? u.full_name : getActor();
+
+  const curUnit = localStorage.getItem('cs_unit_code');
+  if (curUnit && $('#rep-instance')) {
+    $('#rep-instance').value = curUnit;
+  }
+
+  const updateRepRoom = () => {
+    const curInst = $('#rep-instance')?.value;
+    const unit = getAllInstances().find((x) => x.code === curInst);
+    if ($('#rep-room-location')) {
+      $('#rep-room-location').value = (unit && unit.location && unit.location !== '-') ? unit.location : '';
+    }
+    const activeTask = JSON.parse(localStorage.getItem('cs_active_task') || 'null');
+    const infoBox = $('#rep-assignment-info');
+    if (activeTask && activeTask.inst === curInst && activeTask.notes) {
+      if (infoBox) {
+        infoBox.style.display = 'block';
+        if ($('#rep-assignment-type')) $('#rep-assignment-type').textContent = activeTask.type || 'Inspeksi';
+        if ($('#rep-assignment-notes')) $('#rep-assignment-notes').textContent = `Catatan Leader: "${activeTask.notes}"`;
+      }
+    } else {
+      if (infoBox) infoBox.style.display = 'none';
+    }
+  };
+  const repInstEl = $('#rep-instance');
+  if (repInstEl) repInstEl.onchange = updateRepRoom;
+  updateRepRoom();
 }
 
 function closeReportingSidebar() {
@@ -1434,22 +1642,22 @@ async function renderReportsHistory() {
         </p>
         ${r.parts && r.parts.length ? `
           <div style="font-size:11px;color:#0284c7;background:#f0f9ff;padding:4px 8px;border-radius:4px;margin-bottom:10px;">
-            📦 Sparepart: ${r.parts.map((p) => `${esc(p.part_name)} (${p.qty} ${esc(p.unit)})`).join(', ')}
+            Sparepart: ${r.parts.map((p) => `${esc(p.part_name)} (${p.qty} ${esc(p.unit)})`).join(', ')}
           </div>
         ` : ''}
 
         <div class="action-card-footer">
           <div>
-            ${r.leader_approval_by ? `<span style="color:#15803d;font-weight:700;">✔ Disetujui: ${esc(r.leader_approval_by)}</span>` : '<span style="color:#d97706;">Menunggu Approval Leader</span>'}
+            ${r.leader_approval_by ? `<span style="color:#15803d;font-weight:700;">Disetujui: ${esc(r.leader_approval_by)}</span>` : '<span style="color:#d97706;">Menunggu Approval Leader</span>'}
           </div>
           <div class="action-btn-group">
             ${isLeader && r.status !== 'APPROVED' ? `
               <button type="button" class="btn-card-action btn-resolve btn-approve-report" data-id="${r.id}">
-                ✅ Setujui
+                Setujui Laporan
               </button>
             ` : ''}
             <a href="${getAssetBase()}/reports/${r.id}/print" target="_blank" class="btn-card-action btn-switch" style="text-decoration:none;">
-              🖨️ Cetak / Unduh PDF
+              Cetak / Unduh PDF
             </a>
           </div>
         </div>
@@ -1459,7 +1667,7 @@ async function renderReportsHistory() {
     container.querySelectorAll('.btn-approve-report').forEach((btn) => {
       btn.onclick = async () => {
         await api.approveReport(btn.dataset.id);
-        toast('Laporan disetujui Leader ✔', 'ok');
+        toast('Laporan disetujui Leader.', 'ok');
         renderReportsHistory();
       };
     });
@@ -1479,17 +1687,102 @@ async function openAssignmentModal() {
   if ($('#panel-assign-form')) $('#panel-assign-form').style.display = 'block';
   if ($('#panel-assign-history')) $('#panel-assign-history').style.display = 'none';
   if ($('#assign-date')) $('#assign-date').value = new Date().toISOString().slice(0, 10);
+
+  const updateAssignRoom = () => {
+    const curInst = $('#assign-instance')?.value;
+    const unit = getAllInstances().find((x) => x.code === curInst);
+    if ($('#assign-room-location')) {
+      $('#assign-room-location').value = (unit && unit.location && unit.location !== '-') ? unit.location : '';
+    }
+  };
+  const assignInstEl = $('#assign-instance');
+  if (assignInstEl) assignInstEl.onchange = updateAssignRoom;
+  updateAssignRoom();
   
-  // Populate users
+  // Populate users (Khusus Teknisi, mengecualikan Leader dan akun sendiri)
   const userSelect = $('#assign-user');
   if (userSelect) {
     try {
-      const users = await api.users();
-      userSelect.innerHTML = users.map((u) => `
-        <option value="${u.id}">${esc(u.full_name)} (${esc(u.role === 'leader' ? 'Leader' : 'Teknisi')})</option>
-      `).join('');
-    } catch {}
+      const users = await api.users('user');
+      const cur = getCurrentUser();
+      const technicians = (users || []).filter((u) => u.role === 'user' && (!cur || u.id !== cur.id));
+      if (technicians.length === 0) {
+        userSelect.innerHTML = '<option value="" disabled selected>Belum ada teknisi terdaftar</option>';
+      } else {
+        userSelect.innerHTML = technicians.map((u) => `
+          <option value="${u.id}">${esc(u.full_name)} (Teknisi - ${esc(u.section || 'Maintenance')})</option>
+        `).join('');
+      }
+    } catch (err) {
+      console.warn('Gagal memuat teknisi:', err);
+    }
   }
+
+  dlg.showModal();
+}
+
+function openLocationsModal() {
+  const dlg = $('#dlg-locations');
+  const tbody = $('#tbody-manage-locations');
+  if (!dlg || !tbody) return;
+
+  const allUnits = getAllInstances();
+  tbody.innerHTML = allUnits.map((u) => `
+    <tr data-code="${esc(u.code)}">
+      <td style="font-weight:700;color:#1e293b;padding:8px 10px;">${esc(u.code)}</td>
+      <td style="font-size:12px;color:#475569;padding:8px 10px;">${esc(u.name)}</td>
+      <td style="padding:8px 10px;">
+        <select class="loc-building-select" style="width:100%;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff;">
+          <option value="Gedung A" ${u.building === 'Gedung A' ? 'selected' : ''}>Gedung A</option>
+          <option value="Gedung B" ${u.building === 'Gedung B' ? 'selected' : ''}>Gedung B</option>
+          <option value="Gedung C" ${u.building === 'Gedung C' ? 'selected' : ''}>Gedung C</option>
+        </select>
+      </td>
+      <td style="padding:8px 10px;">
+        <input type="text" class="loc-room-input" value="${u.location && u.location !== '-' ? esc(u.location) : ''}" placeholder="Misal: Ruang Kompresor Lt. 2, Area Outdoor, dll." style="width:100%;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;">
+      </td>
+      <td style="text-align:center;padding:8px 10px;">
+        <button type="button" class="btn-save-loc" data-code="${esc(u.code)}" style="background:#16a34a;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;">
+          Simpan
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.btn-save-loc').forEach((btn) => {
+    btn.onclick = async () => {
+      const code = btn.dataset.code;
+      const row = btn.closest('tr');
+      const bld = row.querySelector('.loc-building-select')?.value;
+      const loc = row.querySelector('.loc-room-input')?.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan...';
+      try {
+        await api.updateInstanceLocation({
+          instance_code: code,
+          building: bld,
+          room_location: loc
+        });
+
+        EQUIPMENT_CATALOG.forEach((eq) => {
+          const u = eq.units.find((x) => x.code === code);
+          if (u) {
+            u.building = bld;
+            u.location = loc || '-';
+          }
+        });
+
+        renderEquipGrid();
+        toast(`Lokasi ${code} berhasil diperbarui.`, 'ok');
+      } catch (err) {
+        toast(`Gagal memperbarui lokasi: ${err.message}`, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
+      }
+    };
+  });
 
   dlg.showModal();
 }
@@ -1507,7 +1800,7 @@ function setupEventListeners() {
       const res = await api.login(un, pw);
       setCurrentUser(res.user);
       updateActorUI(res.user.full_name);
-      toast(`Selamat datang, ${res.user.full_name}! 👋`, 'ok');
+      toast(`Selamat datang, ${res.user.full_name}!`, 'ok');
       showPortal();
       loadUserTasks(true);
     } catch (e) {
@@ -1550,7 +1843,7 @@ function setupEventListeners() {
 
     try {
       await api.actionDecision(id, { action_type: 'BACKLOG', scheduled_date: targetDate, notes });
-      toast('Item dipindahkan ke Action Backlog 🟡', 'ok');
+      toast('Item dipindahkan ke Action Backlog.', 'ok');
       $('#dlg-backlog-schedule')?.close();
       loadActionCounts();
       renderActionItems();
@@ -1571,19 +1864,17 @@ function setupEventListeners() {
   $('#sidebar-action-close')?.addEventListener('click', closeActionSidebar);
   $('#sidebar-action-backdrop')?.addEventListener('click', closeActionSidebar);
 
-  $('#tab-action-today')?.addEventListener('click', () => {
-    ui.actionTab = 'TODAY';
-    $('#tab-action-today').classList.add('active');
-    $('#tab-action-backlog').classList.remove('active');
+  const setActionTab = (tab) => {
+    ui.actionTab = tab;
+    $('#tab-action-all')?.classList.toggle('active', tab === 'ALL');
+    $('#tab-action-today')?.classList.toggle('active', tab === 'TODAY');
+    $('#tab-action-backlog')?.classList.toggle('active', tab === 'BACKLOG');
     renderActionItems();
-  });
+  };
 
-  $('#tab-action-backlog')?.addEventListener('click', () => {
-    ui.actionTab = 'BACKLOG';
-    $('#tab-action-backlog').classList.add('active');
-    $('#tab-action-today').classList.remove('active');
-    renderActionItems();
-  });
+  $('#tab-action-all')?.addEventListener('click', () => setActionTab('ALL'));
+  $('#tab-action-today')?.addEventListener('click', () => setActionTab('TODAY'));
+  $('#tab-action-backlog')?.addEventListener('click', () => setActionTab('BACKLOG'));
 
   // 3. Reporting Sidebar Triggers
   $('#btn-open-reporting')?.addEventListener('click', openReportingSidebar);
@@ -1615,6 +1906,7 @@ function setupEventListeners() {
     const pic = $('#rep-pic')?.value.trim();
     const act = $('#rep-action')?.value.trim();
     const conc = $('#rep-conclusion')?.value.trim();
+    const roomLocation = $('#rep-room-location')?.value.trim();
     const actionItemId = $('#form-report').dataset.actionItemId || null;
 
     if (!inst || !dt || !pic || !act) {
@@ -1643,10 +1935,19 @@ function setupEventListeners() {
         action_taken: act,
         conclusion: conc,
         action_item_id: actionItemId,
+        room_location: roomLocation,
         parts
       });
 
-      toast('Laporan pemeliharaan berhasil disimpan ✔', 'ok');
+      if (roomLocation !== undefined) {
+        EQUIPMENT_CATALOG.forEach((eq) => {
+          const u = eq.units.find((x) => x.code === inst);
+          if (u) u.location = roomLocation || '-';
+        });
+        renderEquipGrid();
+      }
+
+      toast('Laporan pemeliharaan berhasil disimpan.', 'ok');
       delete $('#form-report').dataset.actionItemId;
       $('#tbody-parts').innerHTML = '';
       $('#rep-action').value = '';
@@ -1663,8 +1964,10 @@ function setupEventListeners() {
     }
   });
 
-  // 4. Assignment Triggers (Leader)
+  // 4. Assignment & Location Triggers (Leader)
   $('#btn-open-assignment')?.addEventListener('click', openAssignmentModal);
+  $('#btn-open-locations')?.addEventListener('click', openLocationsModal);
+  $('#dlg-locations-close')?.addEventListener('click', () => $('#dlg-locations')?.close());
   // Leader Assignment Modal Tabs
   $('#tab-assign-form')?.addEventListener('click', () => {
     $('#tab-assign-form')?.classList.add('active');
@@ -1716,9 +2019,9 @@ function setupEventListeners() {
 
       if (taskId) {
         await api.updateAssignmentStatus(taskId, 'COMPLETED');
-        toast(`✔ Tugas penugasan inspeksi [${unitCode || 'Mesin'}] berhasil diselesaikan & dikonfirmasi!`, 'ok');
+        toast(`Tugas inspeksi [${unitCode || 'Mesin'}] berhasil diselesaikan & dikonfirmasi.`, 'ok');
       } else {
-        toast('✔ Konfirmasi pemeriksaan unit berhasil disimpan.', 'ok');
+        toast('Konfirmasi pemeriksaan unit berhasil disimpan.', 'ok');
       }
 
       localStorage.removeItem('cs_active_task');
@@ -1729,7 +2032,7 @@ function setupEventListeners() {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = '✔ Selesaikan & Konfirmasi Tugas';
+        btn.textContent = 'Selesaikan & Konfirmasi Tugas';
       }
     }
   });
@@ -1742,6 +2045,7 @@ function setupEventListeners() {
     const type = $('#assign-type')?.value;
     const userId = $('#assign-user')?.value;
     const notes = $('#assign-notes')?.value.trim();
+    const roomLocation = $('#assign-room-location')?.value.trim();
 
     try {
       await api.createAssignment({
@@ -1749,10 +2053,19 @@ function setupEventListeners() {
         schedule_date: dt,
         inspection_type: type,
         assigned_to_user_id: userId,
+        room_location: roomLocation,
         notes
       });
 
-      toast('Penugasan berhasil disimpan ke jadwal teknisi ✔', 'ok');
+      if (roomLocation !== undefined) {
+        EQUIPMENT_CATALOG.forEach((eq) => {
+          const u = eq.units.find((x) => x.code === inst);
+          if (u) u.location = roomLocation || '-';
+        });
+        renderEquipGrid();
+      }
+
+      toast('Penugasan berhasil disimpan ke jadwal teknisi.', 'ok');
       $('#dlg-assignment')?.close();
     } catch (err) {
       toast('Gagal menyimpan penugasan: ' + err.message, 'err');
@@ -1851,7 +2164,7 @@ function setupEventListeners() {
   const bExcel = $('#btn-excel'); if (bExcel) bExcel.onclick = () => {
     if (!S) return toast('Data belum siap untuk diekspor', 'err');
     exportExcel(S);
-    toast('File Excel berhasil diunduh ✔', 'ok');
+    toast('File Excel berhasil diunduh.', 'ok');
   };
   const bWho = $('#who'); if (bWho) bWho.onclick = () => askName(false);
   $('#sync')?.addEventListener('click', async () => {
@@ -1862,7 +2175,7 @@ function setupEventListeners() {
       const r = await api.poll(S.sheet.id, -1);
       apply(r, { force: true });
       setSync('', 'Live');
-      toast('Data tersinkronisasi ✔', 'ok');
+      toast('Data tersinkronisasi.', 'ok');
     } catch (err) {
       setSync('err', 'Gagal');
       toast('Gagal sinkronisasi: ' + err.message, 'err');
@@ -1965,7 +2278,7 @@ function dismissSplash() {
     console.error('Boot error:', e);
     clearTimeout(watchdog);
     if (msg) {
-      msg.innerHTML = `<span style="color:#ef4444;font-weight:600">⚠ ${esc(e.message)}</span><br><button onclick="location.reload()" style="margin-top:12px;padding:7px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;font-size:13px">Muat Ulang</button>`;
+      msg.innerHTML = `<span style="color:#ef4444;font-weight:600">${esc(e.message)}</span><br><button onclick="location.reload()" style="margin-top:12px;padding:7px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;font-size:13px">Muat Ulang</button>`;
     }
     const bar = $('.bar');
     if (bar) bar.style.display = 'none';

@@ -51,15 +51,41 @@ class AssignmentController extends BaseApiController
                 'assigned_to_user_id' => 'required|is_natural_no_zero',
                 'schedule_date'       => 'required|valid_date',
                 'inspection_type'     => 'required|in_list[DAILY,MONTHLY]',
+                'room_location'       => 'permit_empty',
             ]);
 
-            $sessionUser = session()->get('user');
-            $leaderId    = $sessionUser['id'] ?? 1;
+            $sessionUser  = session()->get('user');
+            $leaderId     = $sessionUser['id'] ?? null;
+            $targetUserId = (int) $in['assigned_to_user_id'];
+
+            if ($leaderId && $targetUserId === (int) $leaderId) {
+                throw ChecksheetException::invalid('Leader tidak dapat menugaskan pekerjaan kepada dirinya sendiri.');
+            }
+
+            $targetUser = $this->users->find($targetUserId);
+            if (! $targetUser || ! $targetUser['is_active']) {
+                throw ChecksheetException::notFound('Teknisi tidak ditemukan atau statusnya non-aktif.');
+            }
+
+            if ($targetUser['role'] === 'leader') {
+                throw ChecksheetException::invalid('Penugasan inspeksi hanya dapat diberikan kepada Teknisi (User), bukan sesama Leader.');
+            }
+
+            $instanceCode = trim($in['instance_code']);
+            $roomLocation = trim((string) ($in['room_location'] ?? ''));
+
+            // Bila Leader mengisi nama ruangan/area, perbarui langsung pada master unit alat
+            if ($roomLocation !== '') {
+                $db = \Config\Database::connect();
+                $db->table('cs_equipment_instances')
+                    ->where('instance_code', $instanceCode)
+                    ->update(['room_location' => $roomLocation, 'updated_at' => date('Y-m-d H:i:s')]);
+            }
 
             $data = [
-                'instance_code'       => trim($in['instance_code']),
-                'assigned_to_user_id' => (int) $in['assigned_to_user_id'],
-                'assigned_by_user_id' => (int) $leaderId,
+                'instance_code'       => $instanceCode,
+                'assigned_to_user_id' => $targetUserId,
+                'assigned_by_user_id' => (int) ($leaderId ?? 1),
                 'schedule_date'       => $in['schedule_date'],
                 'inspection_type'     => $in['inspection_type'],
                 'status'              => 'PENDING',
@@ -69,7 +95,11 @@ class AssignmentController extends BaseApiController
             ];
 
             $id = $this->assignments->insert($data, true);
-            return ['id' => $id, 'message' => 'Penugasan berhasil disimpan.'];
+            return [
+                'id'            => $id,
+                'room_location' => $roomLocation,
+                'message'       => 'Penugasan berhasil disimpan.',
+            ];
         });
     }
 
@@ -89,4 +119,3 @@ class AssignmentController extends BaseApiController
         });
     }
 }
-

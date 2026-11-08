@@ -177,7 +177,7 @@ class ChecksheetSeeder extends Seeder
         ]);
 
         // =========================================================================
-        // 7. AIR DRYER ACT80 - Overhaul & Berkala (Form-PLS-MTC-D09)
+        // 7. AIR DRYER ACT80 - Bulanan & Berkala (Form-PLS-MTC-D09)
         // =========================================================================
         $this->seedTemplate([
             'department'   => 'Maintenance',
@@ -253,18 +253,18 @@ class ChecksheetSeeder extends Seeder
         // =========================================================================
         $instances = [
             // Air Dryer ACT80 Instances
-            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-001', 'instance_name' => 'Air Dryer Friulair #1', 'building' => 'Gedung A', 'room_location' => 'Ruang Kompresor Utama Gedung A', 'sort_order' => 1, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-002', 'instance_name' => 'Air Dryer Friulair #2', 'building' => 'Gedung B', 'room_location' => 'Sub-Station Assembly Gedung B', 'sort_order' => 2, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-003', 'instance_name' => 'Air Dryer Friulair #3', 'building' => 'Gedung C', 'room_location' => 'Area Wet Charging Gedung C', 'sort_order' => 3, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-001', 'instance_name' => 'Air Dryer Friulair #1', 'building' => 'Gedung A', 'room_location' => '-', 'sort_order' => 1, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-002', 'instance_name' => 'Air Dryer Friulair #2', 'building' => 'Gedung B', 'room_location' => '-', 'sort_order' => 2, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'air-dryer', 'template_code' => 'AD_D', 'instance_code' => 'AD-003', 'instance_name' => 'Air Dryer Friulair #3', 'building' => 'Gedung C', 'room_location' => '-', 'sort_order' => 3, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
             
             // Chiller LSBLG250 Instances
-            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-001', 'instance_name' => 'Chiller Sentral #1', 'building' => 'Gedung A', 'room_location' => 'Chiller Plant Ruang Utama A', 'sort_order' => 4, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-002', 'instance_name' => 'Chiller Sentral #2', 'building' => 'Gedung B', 'room_location' => 'Sub Chiller Plant Gedung B', 'sort_order' => 5, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-003', 'instance_name' => 'Chiller Sentral #3', 'building' => 'Gedung C', 'room_location' => 'Ruang Chiller Standby Gedung C', 'sort_order' => 6, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-001', 'instance_name' => 'Chiller Sentral #1', 'building' => 'Gedung A', 'room_location' => '-', 'sort_order' => 4, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-002', 'instance_name' => 'Chiller Sentral #2', 'building' => 'Gedung B', 'room_location' => '-', 'sort_order' => 5, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'chiller',   'template_code' => 'CHILLER_D', 'instance_code' => 'CH-003', 'instance_name' => 'Chiller Sentral #3', 'building' => 'Gedung C', 'room_location' => '-', 'sort_order' => 6, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
 
             // Cooling Tower & Scrubber
-            ['equipment_group' => 'cooling-tower', 'template_code' => 'CT', 'instance_code' => 'CT-001', 'instance_name' => 'Cooling Tower Utama #1', 'building' => 'Gedung A', 'room_location' => 'Rooftop Utility Gedung A', 'sort_order' => 7, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['equipment_group' => 'scrubber',      'template_code' => 'SCR', 'instance_code' => 'SCR-001', 'instance_name' => 'Scrubber Kimia #1', 'building' => 'Gedung A', 'room_location' => 'Exhaust Area Outdoor Gedung A', 'sort_order' => 8, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'cooling-tower', 'template_code' => 'CT', 'instance_code' => 'CT-001', 'instance_name' => 'Cooling Tower Utama #1', 'building' => 'Gedung A', 'room_location' => '-', 'sort_order' => 7, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['equipment_group' => 'scrubber',      'template_code' => 'SCR', 'instance_code' => 'SCR-001', 'instance_name' => 'Scrubber Kimia #1', 'building' => 'Gedung A', 'room_location' => '-', 'sort_order' => 8, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
         ];
 
         foreach ($instances as $ins) {

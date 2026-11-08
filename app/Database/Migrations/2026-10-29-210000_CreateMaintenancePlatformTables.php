@@ -73,6 +73,7 @@ class CreateMaintenancePlatformTables extends Migration
             'scheduled_date'   => ['type' => 'DATE', 'null' => true],
             'assigned_user_id' => ['type' => 'INT', 'constraint' => 11, 'null' => true],
             'decision_by'      => ['type' => 'NVARCHAR', 'constraint' => 100, 'null' => true],
+            'backlog_notes'    => ['type' => 'NVARCHAR', 'constraint' => 500, 'null' => true],
             'status'           => ['type' => 'NVARCHAR', 'constraint' => 20, 'default' => 'OPEN'], // 'OPEN', 'IN_PROGRESS', 'RESOLVED'
         ] + $this->ts());
         $this->forge->addKey('id', true);

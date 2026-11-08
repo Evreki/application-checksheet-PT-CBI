@@ -26,12 +26,22 @@ class ReportViewController extends BaseController
         $instance = $instanceModel->where('instance_code', $report['instance_code'])->first();
         $action   = ! empty($report['action_item_id']) ? $actionModel->find($report['action_item_id']) : null;
 
+        $db = \Config\Database::connect();
+        $assignment = $db->table('cs_assignments a')
+            ->select('a.*, l.full_name as leader_name')
+            ->join('cs_users l', 'l.id = a.assigned_by_user_id', 'left')
+            ->where('a.instance_code', $report['instance_code'])
+            ->where('a.schedule_date <=', $report['report_date'])
+            ->orderBy('a.id', 'DESC')
+            ->get()
+            ->getRowArray();
+
         return view('reports/print', [
-            'report'   => $report,
-            'parts'    => $parts,
-            'instance' => $instance,
-            'action'   => $action,
+            'report'     => $report,
+            'parts'      => $parts,
+            'instance'   => $instance,
+            'action'     => $action,
+            'assignment' => $assignment,
         ]);
     }
 }
-

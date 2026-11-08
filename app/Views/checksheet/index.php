@@ -29,8 +29,16 @@ setTimeout(function() {
 <!-- 0. INDUSTRIAL LOGIN SCREEN (AUTH SYSTEM)                                  -->
 <!-- ========================================================================= -->
 <div id="login-view">
+    <!-- Ambient Floating Orbs & Blueprint Grid -->
+    <div class="login-ambient-orb login-orb-1" aria-hidden="true"></div>
+    <div class="login-ambient-orb login-orb-2" aria-hidden="true"></div>
+    <div class="login-grid-bg" aria-hidden="true"></div>
+
     <div class="login-container">
-        <!-- Left: Industrial Branding & Trial Info -->
+        <!-- Top Multi-Tone Industrial Accent Line -->
+        <div class="login-accent-line"></div>
+
+        <!-- Left: Industrial Branding -->
         <div class="login-left-banner">
             <div class="login-brand-group">
                 <div class="login-logo-circle">
@@ -44,26 +52,28 @@ setTimeout(function() {
 
             <div class="login-left-content">
                 <div class="login-tagline-badge">
-                    <span>⚡ Real-Time Maintenance Platform</span>
+                    <span class="login-status-dot"></span>
+                    <span>Real-Time Maintenance Platform</span>
                 </div>
                 <h1>Central Inspection &amp; Action System</h1>
                 <p>Portal terpadu pelaksanaan inspeksi checksheet berkala, manajemen temuan abnormalitas (NG), dan pelaporan tindakan perbaikan pemeliharaan pabrik.</p>
             </div>
 
-            <div class="login-trial-guide">
-                <h4>Akun Uji Coba (Trial Mode):</h4>
-                <div class="login-trial-list">
-                    <span>Leader: <strong>leader</strong> (Pass: 12345)</span>
-                    <span>User 1: <strong>user1</strong> (Pass: 12345)</span>
-                    <span>User 2: <strong>user2</strong> (Pass: 12345)</span>
+            <div class="login-brand-footer">
+                <div class="login-system-pill">
+                    <span class="login-pill-pulse"></span>
+                    <span>Sistem Terhubung &bull; Siap Digunakan</span>
                 </div>
+                <p>&copy; <?= date('Y') ?> PT Century Batteries Indonesia &bull; All Rights Reserved</p>
             </div>
         </div>
 
         <!-- Right: Login Form -->
         <div class="login-right-form">
             <div class="login-form-header">
+                <div class="login-header-pre">PORTAL AUTHENTICATION</div>
                 <h3>Masuk ke Sistem</h3>
+                <div class="login-header-bar"></div>
                 <p>Silakan masukkan kredensial akun maintenance Anda</p>
             </div>
 
@@ -72,35 +82,25 @@ setTimeout(function() {
             <form id="form-login" onsubmit="return false;">
                 <div class="login-input-group">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" placeholder="Masukkan username" required autocomplete="username">
+                    <div class="login-input-wrap">
+                        <svg class="login-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <input type="text" id="login-username" placeholder="Masukkan username" required autocomplete="username">
+                    </div>
                 </div>
 
                 <div class="login-input-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="Masukkan password" required autocomplete="current-password">
+                    <div class="login-input-wrap">
+                        <svg class="login-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <input type="password" id="login-password" placeholder="Masukkan password" required autocomplete="current-password">
+                    </div>
                 </div>
 
                 <button type="submit" id="btn-submit-login" class="login-btn-submit">
-                    <span>Masuk Portal</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    <span>Masuk ke Portal</span>
+                    <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </button>
             </form>
-
-            <div class="quick-login-divider">
-                <span>Atau Masuk Cepat (Trial)</span>
-            </div>
-
-            <div class="quick-login-grid">
-                <button type="button" class="btn-quick-user" data-user="leader" title="Login sebagai Leader">
-                    👑 Leader
-                </button>
-                <button type="button" class="btn-quick-user" data-user="user1" title="Login sebagai User 1">
-                    👤 User 1
-                </button>
-                <button type="button" class="btn-quick-user" data-user="user2" title="Login sebagai User 2">
-                    👤 User 2
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -130,7 +130,7 @@ setTimeout(function() {
                 <button id="btn-open-actions" class="nav-action-btn btn-nav-action" type="button" title="Buka Daftar Temuan NG &amp; Tindakan">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     <span class="btn-text">Action (NG)</span>
-                    <span id="action-badge-count" class="nav-badge-count">0</span>
+                    <span id="action-badge-count" class="nav-badge-count" style="display:none;"></span>
                 </button>
 
                 <!-- Button Trigger: Reporting Sidebar -->
@@ -150,6 +150,12 @@ setTimeout(function() {
                 <button id="btn-open-assignment" class="nav-action-btn btn-nav-assign" type="button" title="Tugaskan Jadwal Inspeksi (Leader)" style="display:none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     <span class="btn-text">Penugasan</span>
+                </button>
+
+                <!-- Button Trigger: Manage Equipment Locations (Leader Only) -->
+                <button id="btn-open-locations" class="nav-action-btn btn-nav-locations" type="button" title="Kelola Lokasi & Area Ruangan Mesin (Leader)" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span class="btn-text">Area Mesin</span>
                 </button>
 
                 <!-- User Profile Pill -->
@@ -339,7 +345,7 @@ setTimeout(function() {
         </div>
         <div class="atb-right">
             <button type="button" id="btn-complete-active-task" class="btn-complete-task">
-                ✔ Selesaikan &amp; Konfirmasi Tugas
+                Selesaikan &amp; Konfirmasi Tugas
             </button>
         </div>
     </div>
@@ -368,11 +374,14 @@ setTimeout(function() {
     </div>
 
     <div class="sidebar-nav-tabs">
-        <button id="tab-action-today" class="sidebar-tab-btn active" type="button" data-type="TODAY">
-            🔴 Action Today <span id="count-action-today" style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:999px;font-size:10px;">0</span>
+        <button id="tab-action-all" class="sidebar-tab-btn active" type="button" data-type="ALL">
+            Semua <span id="count-action-all" style="background:#e2e8f0;color:#1e293b;padding:1px 6px;border-radius:999px;font-size:10px;">0</span>
+        </button>
+        <button id="tab-action-today" class="sidebar-tab-btn" type="button" data-type="TODAY">
+            Action Today <span id="count-action-today" style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:999px;font-size:10px;">0</span>
         </button>
         <button id="tab-action-backlog" class="sidebar-tab-btn" type="button" data-type="BACKLOG">
-            🟡 Action Backlog <span id="count-action-backlog" style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:999px;font-size:10px;">0</span>
+            Action Backlog <span id="count-action-backlog" style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:999px;font-size:10px;">0</span>
         </button>
     </div>
 
@@ -408,10 +417,10 @@ setTimeout(function() {
 
     <div class="sidebar-nav-tabs">
         <button id="tab-report-new" class="sidebar-tab-btn active" type="button">
-            ✍️ Input Laporan Baru
+            Input Laporan Baru
         </button>
         <button id="tab-report-history" class="sidebar-tab-btn" type="button">
-            📄 Riwayat &amp; Unduh PDF
+            Riwayat &amp; Unduh PDF
         </button>
     </div>
 
@@ -422,6 +431,19 @@ setTimeout(function() {
                 <div class="report-form-group">
                     <label for="rep-instance">Pilih Unit Mesin / ID Alat:</label>
                     <select id="rep-instance" required></select>
+                </div>
+
+                <div class="report-form-group">
+                    <label for="rep-room-location">Area / Spesifik Ruangan Mesin:</label>
+                    <input type="text" id="rep-room-location" placeholder="Masukkan nama ruangan / area mesin (tersimpan ke database)..." autocomplete="off">
+                </div>
+
+                <div id="rep-assignment-info" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;">
+                    <div style="font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;align-items:center;gap:6px;">
+                        <span>Instruksi Penugasan Leader:</span>
+                        <span id="rep-assignment-type" style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:4px;">-</span>
+                    </div>
+                    <div id="rep-assignment-notes" style="color:#475569;font-style:italic;">-</div>
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -476,7 +498,7 @@ setTimeout(function() {
 
                 <div class="sidebar-footer" style="padding:0;background:transparent;border:none;">
                     <button type="submit" id="btn-submit-report" class="btn-submit-report">
-                        💾 Simpan &amp; Buka Laporan PDF
+                        Simpan &amp; Buka Laporan PDF
                     </button>
                 </div>
             </form>
@@ -506,10 +528,10 @@ setTimeout(function() {
 
         <div class="sidebar-nav-tabs" style="border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:0 16px;">
             <button id="tab-assign-form" class="sidebar-tab-btn active" type="button">
-                ✍️ Beri Tugas Baru
+                Beri Tugas Baru
             </button>
             <button id="tab-assign-history" class="sidebar-tab-btn" type="button">
-                📋 Monitoring Status Teknisi
+                Monitoring Status Teknisi
             </button>
         </div>
 
@@ -520,6 +542,12 @@ setTimeout(function() {
                     <div class="report-form-group">
                         <label for="assign-instance">Pilih Alat &amp; Lokasi Gedung:</label>
                         <select id="assign-instance" required></select>
+                    </div>
+
+                    <div class="report-form-group">
+                        <label for="assign-room-location">Area / Spesifik Ruangan Mesin:</label>
+                        <input type="text" id="assign-room-location" placeholder="Masukkan nama ruangan / area mesin (misal: Ruang Kompresor Lt. 2, Area Outdoor, dll.)" autocomplete="off">
+                        <small style="font-size:11px;color:#64748b;display:block;margin-top:3px;">Leader dapat menentukan/memperbarui area ruangan unit ini (tersimpan ke database).</small>
                     </div>
 
                     <div class="modal-grid-2">
@@ -577,10 +605,10 @@ setTimeout(function() {
 
         <div class="sidebar-nav-tabs" style="border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:0 16px;">
             <button id="tab-tasks-pending" class="sidebar-tab-btn active" type="button">
-                ⏳ Belum Dikerjakan <span id="count-pending-tasks" style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:999px;font-size:10px;margin-left:4px;">0</span>
+                Belum Dikerjakan <span id="count-pending-tasks" style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:999px;font-size:10px;margin-left:4px;">0</span>
             </button>
             <button id="tab-tasks-done" class="sidebar-tab-btn" type="button">
-                ✔ Riwayat Selesai
+                Riwayat Selesai
             </button>
         </div>
 
@@ -624,7 +652,7 @@ setTimeout(function() {
                 <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
                     <button type="button" id="btn-cancel-backlog" class="filter-pill" style="padding:8px 16px;cursor:pointer;">Batal</button>
                     <button type="submit" id="btn-submit-backlog" class="btn-submit-report" style="width:auto;padding:8px 20px;margin:0;background:#d97706;">
-                        ✅ Simpan Jadwal Backlog
+                        Simpan Jadwal Backlog
                     </button>
                 </div>
             </form>
@@ -653,6 +681,42 @@ setTimeout(function() {
                 <button type="button" id="btn-confirm-logout-yes" class="btn-submit-report" style="width:auto;padding:8px 24px;margin:0;background:#b91c1c;box-shadow:none;">
                     Ya, Keluar
                 </button>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<!-- ========================================================================= -->
+<!-- 5E. MODAL DIALOG: KELOLA AREA / RUANGAN MESIN (LEADER ONLY)                -->
+<!-- ========================================================================= -->
+<dialog id="dlg-locations" class="modal-dlg">
+    <div class="modal-card modal-card-lg" style="max-width:850px;">
+        <div class="modal-header" style="background:#1e293b;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <h3>Kelola Lokasi Gedung &amp; Area Ruangan Mesin</h3>
+            </div>
+            <button id="dlg-locations-close" type="button" style="border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:18px;display:flex;align-items:center;padding:4px;">✕</button>
+        </div>
+        <div class="modal-body" style="padding:18px 22px;">
+            <p style="font-size:12.5px;color:#64748b;margin:0 0 14px;line-height:1.5;">
+                Sebagai Leader, Anda dapat menentukan lokasi gedung dan deskripsi area / spesifik ruangan untuk masing-masing unit mesin. Data ini otomatis tersimpan ke database dan tampil di kartu mesin, form penugasan, serta lembar cetak laporan (PDF/Print).
+            </p>
+            <div style="overflow-x:auto;">
+                <table class="parts-table" style="width:100%;font-size:12.5px;">
+                    <thead>
+                        <tr>
+                            <th style="width:90px;">Kode Unit</th>
+                            <th>Nama Mesin</th>
+                            <th style="width:140px;">Lokasi Gedung</th>
+                            <th>Area / Spesifik Ruangan</th>
+                            <th style="width:90px;text-align:center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-manage-locations">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -697,7 +761,7 @@ setTimeout(function() {
     <div style="background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;max-width:92vw;max-height:92vh;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
             <div style="font-weight:700;font-size:14px;color:#1e293b;display:flex;align-items:center;gap:8px;">
-                <span>🔍</span> <span id="photo-zoom-title">Layout &amp; Foto Komponen Mesin</span>
+                <span id="photo-zoom-title">Layout &amp; Foto Komponen Mesin</span>
             </div>
             <button id="photo-zoom-close" type="button" style="border:none;background:#e2e8f0;color:#334155;border-radius:50%;width:30px;height:30px;cursor:pointer;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s;">✕</button>
         </div>

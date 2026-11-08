@@ -60,6 +60,7 @@ class ActionController extends BaseApiController
                 'scheduled_date'   => ! empty($in['scheduled_date']) ? $in['scheduled_date'] : date('Y-m-d'),
                 'assigned_user_id' => ! empty($in['assigned_user_id']) ? (int) $in['assigned_user_id'] : null,
                 'decision_by'      => $actor,
+                'backlog_notes'    => ! empty($in['backlog_notes']) ? trim($in['backlog_notes']) : (! empty($in['notes']) ? trim($in['notes']) : null),
                 'status'           => 'OPEN',
                 'created_at'       => date('Y-m-d H:i:s'),
                 'updated_at'       => date('Y-m-d H:i:s'),
@@ -87,12 +88,31 @@ class ActionController extends BaseApiController
                 'updated_at'     => date('Y-m-d H:i:s'),
             ];
 
+            if (isset($in['notes'])) {
+                $update['backlog_notes'] = trim($in['notes']);
+            } elseif (isset($in['backlog_notes'])) {
+                $update['backlog_notes'] = trim($in['backlog_notes']);
+            }
+
             if (isset($in['assigned_user_id'])) {
                 $update['assigned_user_id'] = (int) $in['assigned_user_id'];
             }
 
             $this->actions->update($id, $update);
             return ['message' => 'Keputusan Leader berhasil disimpan.'];
+        });
+    }
+
+    public function delete(int $id): ResponseInterface
+    {
+        return $this->run(function () use ($id) {
+            $sessionUser = session()->get('user');
+            if (($sessionUser['role'] ?? '') !== 'leader') {
+                throw ChecksheetException::forbidden('Hanya Leader yang berhak menghapus/menghilangkan daftar tindakan.');
+            }
+
+            $this->actions->delete($id);
+            return ['message' => 'Temuan tindakan berhasil dihilangkan oleh Leader.'];
         });
     }
 

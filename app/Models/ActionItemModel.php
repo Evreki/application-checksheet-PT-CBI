@@ -13,7 +13,7 @@ class ActionItemModel extends Model
     protected $allowedFields = [
         'sheet_id', 'instance_code', 'item_name', 'action_type',
         'ng_description', 'scheduled_date', 'assigned_user_id',
-        'decision_by', 'status',
+        'decision_by', 'status', 'backlog_notes',
     ];
 }
 
