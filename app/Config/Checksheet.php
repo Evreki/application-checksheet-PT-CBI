@@ -10,7 +10,7 @@ class Checksheet extends BaseConfig
     public string $company = 'PT. Century Batteries Indonesia';
 
     /** Interval polling sinkronisasi antar-pengguna (ms). */
-    public int $pollIntervalMs = 4000;
+    public int $pollIntervalMs = 10000;
 
     /** Blok mingguan untuk approval Kasie (rentang hari, inklusif). */
     public array $weekBlocks = [[1, 8], [9, 15], [16, 22], [23, 31]];

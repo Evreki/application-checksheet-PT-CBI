@@ -41,8 +41,16 @@ class ReportController extends BaseApiController
                 }
 
                 $list = $b->get()->getResultArray();
-                foreach ($list as &$item) {
-                    $item['parts'] = $this->parts->where('report_id', $item['id'])->findAll();
+                if (! empty($list)) {
+                    $reportIds = array_column($list, 'id');
+                    $allParts  = $this->parts->whereIn('report_id', $reportIds)->findAll();
+                    $partsByReport = [];
+                    foreach ($allParts as $p) {
+                        $partsByReport[$p['report_id']][] = $p;
+                    }
+                    foreach ($list as &$item) {
+                        $item['parts'] = $partsByReport[$item['id']] ?? [];
+                    }
                 }
 
                 return $list;

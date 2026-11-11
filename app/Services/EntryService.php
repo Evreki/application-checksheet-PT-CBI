@@ -72,23 +72,29 @@ class EntryService
         }
 
         $items = (new TemplateItemModel())->where('template_id', $sheet['template_id'])->findAll();
-        $db    = db_connect();
-        $db->transStart();
-        $added = 0;
+        $existing = $this->entries->select('item_id')
+            ->where(['sheet_id' => $sheetId, 'day_no' => $day])
+            ->findAll();
+        $existingMap = array_flip(array_column($existing, 'item_id'));
+
+        $batch = [];
         foreach ($items as $it) {
-            if ($it['calc_type']) {
+            if ($it['calc_type'] || isset($existingMap[$it['id']])) {
                 continue;
             }
-            $key = ['sheet_id' => $sheetId, 'item_id' => $it['id'], 'day_no' => $day];
-            if ($this->entries->where($key)->first()) {
-                continue;
-            }
-            $this->entries->insert($key + ['symbol' => $symbol, 'updated_by' => $actor]);
-            $added++;
+            $batch[] = [
+                'sheet_id'   => $sheetId,
+                'item_id'    => $it['id'],
+                'day_no'     => $day,
+                'symbol'     => $symbol,
+                'updated_by' => $actor,
+            ];
         }
-        $db->transComplete();
-        if (! $db->transStatus()) {
-            throw new \RuntimeException('Gagal menyimpan isian massal.');
+
+        $added = 0;
+        if (! empty($batch)) {
+            $this->entries->insertBatch($batch);
+            $added = count($batch);
         }
         $added && $this->sheets->bump($sheetId, $actor);
         return $added;

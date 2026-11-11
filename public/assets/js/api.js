@@ -1,5 +1,13 @@
 // Klien API tipis. Semua mutasi mengembalikan state lembar terbaru.
-const base = document.querySelector('meta[name="base-url"]').content.replace(/\/$/, '');
+let base = document.querySelector('meta[name="base-url"]')?.content?.replace(/\/$/, '') || '';
+try {
+  const parsed = new URL(base, window.location.href);
+  if (parsed.origin !== window.location.origin) {
+    base = window.location.origin + parsed.pathname.replace(/\/$/, '');
+  }
+} catch {
+  base = window.location.origin;
+}
 let actor = localStorage.getItem('cs_actor') || '';
 let currentUser = null;
 try {
@@ -25,7 +33,7 @@ export const setCurrentUser = (u) => {
 async function call(method, path, body) {
   const res = await fetch(`${base}/api/v1/${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Actor-Name': encodeURIComponent(actor) },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-Actor-Name': encodeURIComponent(actor) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   let json = {};
