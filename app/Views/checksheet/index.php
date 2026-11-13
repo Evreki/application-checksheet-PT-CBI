@@ -313,7 +313,7 @@ setTimeout(function() {
             </div>
         </div>
 
-        <!-- 2. Center Group: Month & Year Selector -->
+        <!-- 2. Center Group: Month & Year Selector + Document Standard Badge -->
         <div class="tb-group tb-center">
             <div class="period">
                 <button id="period-prev" class="period-btn" type="button" title="Bulan sebelumnya (Ctrl+←)">
@@ -326,6 +326,10 @@ setTimeout(function() {
                 <button id="period-next" class="period-btn" type="button" title="Bulan berikutnya (Ctrl+→)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
+            </div>
+            <div class="doc-badge" id="doc-badge" title="Format Formulir Dokumen ISO/SOP">
+                <span class="doc-badge-dot"></span>
+                <span id="doc-badge-code">Form Checksheet</span>
             </div>
         </div>
 

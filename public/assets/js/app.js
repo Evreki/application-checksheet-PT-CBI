@@ -90,6 +90,10 @@ function apply(state, { force = false } = {}) {
 function render() {
   ui.dirty = false;
   sheetEl.innerHTML = renderSheet(S, ui.extraRows);
+  if (S?.template?.form_no && $('#doc-badge-code')) {
+    const rev = S.template.revision ? ` (Rev. ${S.template.revision})` : '';
+    $('#doc-badge-code').textContent = `${S.template.form_no}${rev}`;
+  }
   if (ui.focus) {
     const { item, day } = ui.focus;
     $(`td.day[data-item="${item}"][data-day="${day}"]`)?.focus({ preventScroll: true });
